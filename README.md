@@ -6,3 +6,6 @@
 - bcrypt
 - JWT(jsonWebToken)
 - proxy middleware 사용
+
+### 2021-03-14
+ - 로그인, 회원가입 기능 확인
