@@ -4,7 +4,6 @@ const { User } = require('../models/User');
 const { auth } = require('../middleware/auth');
 
 router.post("/register", (req, res) => {
-    console.log("register Try")
     //회원가입할때 필요한 정보를 client에서 가져오면
     //그것들을 DB에 넣어준다.
     const user = new User(req.body)
@@ -23,7 +22,6 @@ router.post("/register", (req, res) => {
 router.post('/login', (req, res) => {
     //요청된 이메일을 데이터 베이스에서 있는지 찾는다.
     User.findOne({ email: req.body.email }, (err, user) => { //몽고디비 함수
-        console.log("login Try")
         if (!user) { //반환된 유저정보가 없는 경우
             return res.json({
                 loginSuccess: false,
@@ -58,7 +56,6 @@ router.get('/auth', auth, (req, res) => {
     //클라이언트에 정보 전달 가능
     //role 0 ->일반 유저
     //role 1 -> 관리자
-    console.log('auth Try')
     res.status(200).json({
         _id: req.user._id,
         isAdmin: req.user.role === 0 ? false : true,

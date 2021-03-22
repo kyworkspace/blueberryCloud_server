@@ -12,3 +12,7 @@
 
 ### 업로드 루트 생성
 - 프로젝트 루트에 uploads 폴더 생성되도록 함
+
+### save, insert 차이
+- save는 _id 중복검사 후 덮어쓰기(update)
+- insert는 중복검사 후 오류 발생

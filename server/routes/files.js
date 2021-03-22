@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const fs = require('fs');
+const { File } = require('../models/Files');
 
 var storage = multer.diskStorage({
     //파일이 저장되는 물리적인 경로
@@ -27,9 +28,6 @@ const makeFolder = (dir) => {
 router.post('/file/upload/pictures', (req, res) => {
     //파일 있는지 없는지 확인
     makeFolder(`./uploads/pictures`)
-
-
-
     uploadPicture(req, res, (err) => {
         //실패했을때
         if (err) return res.json({ success: false, err });
@@ -47,5 +45,23 @@ router.post('/file/upload/pictures', (req, res) => {
         return res.json({ success: true, fileInfo: res.req.file })
     })
 })
+
+
+/***
+ * 사진's(파일들) 업로드
+ * ***/
+router.post('/pictures/save', (req, res) => {
+    const fileList = req.body;
+    File.insertMany(fileList).then(
+        response => { return res.status(200).json({ success: true }) }
+    ).catch(
+        e => { return res.status(400).json({ success: false, err }) }
+    )
+
+})
+
+
+
+
 
 module.exports = router;

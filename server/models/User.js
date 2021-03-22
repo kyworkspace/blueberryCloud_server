@@ -1,12 +1,8 @@
 const mongoose = require('mongoose');
-
-
 const bcrypt = require('bcrypt');
 //salt를 이용해서 비밀번호 암호화
 const saltRounds = 10;
 const jwt = require('jsonwebtoken');
-
-
 
 const userSchema = mongoose.Schema({
     name: {
