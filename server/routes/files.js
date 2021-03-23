@@ -60,7 +60,27 @@ router.post('/pictures/save', (req, res) => {
 
 })
 
+/**
+ * 파일 리스트 가져오기
+ * **/
+router.post('/files/list', (req, res) => {
+    let limit = req.body.limit ? parseInt(req.body.limit) : 20;
+    let skip = req.body.skip ? parseInt(req.body.skip) : 0;
+    let term = req.body.searchTerm;
+    //필터 적용하기 req.body.filters
+    let findArgs = {};
+    // for (let key in req.body.filters) {
 
+    // }
+    File.find()
+        .populate('writer')
+        .skip(skip)
+        .limit(limit)
+        .exec((err, fileList) => {
+            if (err) return res.status(400).json({ success: false, err })
+            res.status(200).json({ success: true, fileList, postSize: fileList.length })
+        })
+})
 
 
 
