@@ -75,6 +75,7 @@ router.post('/files/list', (req, res) => {
     File.find()
         .populate('writer')
         .skip(skip)
+        .sort({ "createdAt": -1 })
         .limit(limit)
         .exec((err, fileList) => {
             if (err) return res.status(400).json({ success: false, err })
