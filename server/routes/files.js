@@ -72,6 +72,10 @@ router.post('/files/list', (req, res) => {
     // for (let key in req.body.filters) {
 
     // }
+    let totalCount = 0;
+    File.count(findArgs, (err, count) => {
+        totalCount = count
+    })
     File.find()
         .populate('writer')
         .skip(skip)
@@ -79,7 +83,7 @@ router.post('/files/list', (req, res) => {
         .limit(limit)
         .exec((err, fileList) => {
             if (err) return res.status(400).json({ success: false, err })
-            res.status(200).json({ success: true, fileList, postSize: fileList.length })
+            res.status(200).json({ success: true, fileList, postSize: fileList.length, totalCount: totalCount })
         })
 })
 
