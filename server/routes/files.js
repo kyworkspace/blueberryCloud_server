@@ -63,7 +63,6 @@ router.post('/pictures/save', (req, res) => {
  * 폴더 생성
  * ***/
 router.post('/folder/create', (req, res) => {
-    console.log(req.body)
     const folder = new File(req.body);
 
     folder.save((err, folderInfo) => {
