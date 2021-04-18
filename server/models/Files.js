@@ -12,8 +12,12 @@ const fileSchema = mongoose.Schema({
     originalname: { //오리지날 파일명
         type: String,
     },
-    path: { //경로
+    originalpath: { //실제 파일 경로
         type: String,
+    },
+    cloudpath: {
+        type: String,
+        default: 'ALL'
     },
     size: { //크기
         type: Number,
@@ -27,6 +31,14 @@ const fileSchema = mongoose.Schema({
         type: Array,
         default: []
     },
+    importance: {
+        // 0 : 즐겨찾기
+        // 1 : 폴더
+        // 2 : 일반 파일
+        //중요도
+        type: Number,
+        default: 2
+    },
     writer: { //작성자
         type: Schema.Types.ObjectId,
         ref: 'User'
@@ -34,11 +46,13 @@ const fileSchema = mongoose.Schema({
 }, { timestamps: true });
 
 fileSchema.index({
+    cloudpath: 'text',
     filename: 'text',
-    description: 'text'
+    description: 'text',
 }, {
     weights: {
-        filename: 5,
+        cloudpath: 5,
+        filename: 3,
         description: 1
     }
 })

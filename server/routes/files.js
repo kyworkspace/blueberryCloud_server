@@ -59,6 +59,18 @@ router.post('/pictures/save', (req, res) => {
     )
 
 })
+/**
+ * 폴더 생성
+ * ***/
+router.post('/folder/create', (req, res) => {
+    console.log(req.body)
+    const folder = new File(req.body);
+
+    folder.save((err, folderInfo) => {
+        if (err) return res.status(400).json({ success: false, err });
+        return res.status(200).json({ success: true, folderInfo })
+    })
+})
 
 /**
  * 파일 리스트 가져오기
@@ -66,7 +78,8 @@ router.post('/pictures/save', (req, res) => {
 router.post('/files/list', (req, res) => {
     let limit = req.body.limit ? parseInt(req.body.limit) : 20;
     let skip = req.body.skip ? parseInt(req.body.skip) : 0;
-    let term = req.body.searchTerm;
+    let cloudpath = req.body.cloudpath ? req.body.cloudpath : 'ALL';
+    //let term = req.body.searchTerm; 검색어
     //필터 적용하기 req.body.filters
     let findArgs = {};
     // for (let key in req.body.filters) {
@@ -76,10 +89,13 @@ router.post('/files/list', (req, res) => {
     File.count(findArgs, (err, count) => {
         totalCount = count
     })
-    File.find()
+    File
+        .find({ cloudpath: cloudpath }) //폴더경로 검색
+        .find()
         .populate('writer')
         .skip(skip)
-        .sort({ "createdAt": -1 })
+        //파일 중요도, 파일명, 아이디, 생성일자로 정렬
+        .sort({ "importance": 1, "filename": 1, "_id": 1, "createdAt": -1, })
         .limit(limit)
         .exec((err, fileList) => {
             if (err) return res.status(400).json({ success: false, err })

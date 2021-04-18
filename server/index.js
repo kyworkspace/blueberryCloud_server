@@ -51,6 +51,7 @@ app.get('/', (req, res) => {
 //라우터 교통 정리
 app.use('/api/users', require('./routes/user'));
 app.use('/api/cloud', require('./routes/files'));
+//app.use('/api/folder', require('./routes/folder'))
 
 //로컬 업로드 파일 url과 경로
 app.use('/uploads', express.static('uploads'));

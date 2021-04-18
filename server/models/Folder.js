@@ -9,6 +9,10 @@ const folderSchema = mongoose.Schema({
     path: { //경로
         type: String,
     },
+    writer: {//작성자
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }
 }, { timestamps: true });
 
 folderSchema.index({
