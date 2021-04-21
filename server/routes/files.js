@@ -80,7 +80,7 @@ router.post('/files/list', (req, res) => {
     let cloudpath = req.body.cloudpath ? req.body.cloudpath : 'ALL';
     //let term = req.body.searchTerm; 검색어
     //필터 적용하기 req.body.filters
-    let findArgs = {};
+    let findArgs = { cloudpath: cloudpath };
     // for (let key in req.body.filters) {
 
     // }
@@ -89,7 +89,7 @@ router.post('/files/list', (req, res) => {
         totalCount = count
     })
     File
-        .find({ cloudpath: cloudpath }) //폴더경로 검색
+        .find(findArgs) //폴더경로 검색
         .find()
         .populate('writer')
         .skip(skip)
