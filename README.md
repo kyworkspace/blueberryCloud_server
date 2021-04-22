@@ -16,3 +16,13 @@
 ### save, insert 차이
 - save는 _id 중복검사 후 덮어쓰기(update)
 - insert는 중복검사 후 오류 발생
+
+### deleteMany, deleteOnde?
+fileList에 들어있는 [_id,_id,_id...] 형태의 배열을 한번에 지울수 있는 형태의 쿼리
+단일 삭제 할때는 deleteOne을 사용
+```
+File.deleteMany({ _id: { $in: fileList } }, (err, obj) => {
+        if (err) res.status(400).json({ success: false, err });
+        return res.status(200).json({ success: true, count: obj.deletedCount });
+    })
+```

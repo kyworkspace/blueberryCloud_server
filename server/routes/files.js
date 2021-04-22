@@ -102,6 +102,18 @@ router.post('/files/list', (req, res) => {
         })
 })
 
+/**
+ * 선택 파일 삭제
+ * **/
+router.post('/files/delete', (req, res) => {
+    let fileList = req.body.fileList;
+
+    File.deleteMany({ _id: { $in: fileList } }, (err, obj) => {
+        if (err) res.status(400).json({ success: false, err });
+        return res.status(200).json({ success: true, count: obj.deletedCount });
+    })
+})
+
 
 
 module.exports = router;
