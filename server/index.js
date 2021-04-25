@@ -25,10 +25,10 @@ const port = 5000
  * true의 경우 다중 오브젝트를 가져올 수 있도록 한다.
  * 즉, 보낸대로 받고 싶으면 true를 사용하여야 함.
  * ***/
-app.use(bodyParser.urlencoded({ extended: true }));
+//app.use(bodyParser.urlencoded({ extended: true }));
 //express 의 빌트인 body-Parser
 // app.use(express.json());
-app.use(bodyParser.json());
+app.use(express.json());
 //cookie-parser
 app.use(cookieParser());
 //cors
@@ -66,3 +66,5 @@ if (process.env.NODE_ENV === "production") {
 app.listen(port, () => {
     console.log(`app listening at http://localhost:${port}`)
 })
+
+module.exports = { bodyParser }

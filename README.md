@@ -26,3 +26,6 @@ File.deleteMany({ _id: { $in: fileList } }, (err, obj) => {
         return res.status(200).json({ success: true, count: obj.deletedCount });
     })
 ```
+
+### 저장되는 폴더 경로 수정
+    - MAIN / 사용자 ID(각 root 폴더) / 클라우드 내 폴더 / 저장 날짜(YYYYMMDD) / file | picture | video
