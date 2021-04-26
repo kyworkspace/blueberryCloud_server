@@ -23,6 +23,10 @@ const fileSchema = mongoose.Schema({
         type: Number,
         default: 0
     },
+    thumbnailpath: { //동영상 썸네일
+        type: String,
+        default: ""
+    },
     description: {//설명
         type: String,
         default: ""
