@@ -30,3 +30,5 @@ File.deleteMany({ _id: { $in: fileList } }, (err, obj) => {
 ### 저장되는 폴더 경로 수정
     - MAIN / 사용자 ID(각 root 폴더) / 클라우드 내 폴더 / 저장 날짜(YYYYMMDD) / file | picture | video
     - 할려고 했는데 formData에서 path를 가져와서 저장하는 방법을 할수가 없어서 임시적으로 MAIN/날짜 로 하는 방향으로 설정
+    - 동영상 저장 부분에서 수정 완료
+    - 파일을 저장할때 원본 저장소에서 가져와서 -> 신규 경로로 파일 이동시킴
