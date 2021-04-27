@@ -171,7 +171,7 @@ router.post('/file/upload/video/thumbnail', (req, res) => {
         //ffprobe는 ffmpeg 받을때 같이 딸려오는것
         fileDuration = metadata.format.duration;
     })
-    let convert = 'output.mp4' //저장경로/ 파일명
+    let convert = 'uploads/tempfolder/output.mp4' //저장경로/ 파일명
     console.log(req.body.url);
     ffmpeg(req.body.url)
         .videoCodec('libx264')
