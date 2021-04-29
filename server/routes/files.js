@@ -84,7 +84,6 @@ router.post('/file/upload/pictures', (req, res) => {
 router.post('/pictures/save', (req, res) => {
     const fileList = req.body;
     fileList.forEach((item) => {
-        // 동영상 저장될 폴더
         makeFolder(`./uploads/${item.originalpath}`)
         let oldpath = item.path;
         let newPath = `uploads/${item.originalpath}/${item.filename}`;
@@ -164,47 +163,52 @@ router.post('/files/delete', (req, res) => {
 router.post('/file/upload/video/thumbnail', (req, res) => {
     let filePath = "";
     let fileDuration = "";
-    let outputFilenames = []
-    console.log('~~~~~~~~~~~~~~~~~~~~~~', req.body)
+    let outputFilenames = [];
+    //영상 임시 저장 루트
+    makeFolder(`./uploads/tempfolder/converted`);
+    //썸네일 임시저장 루트
+    makeFolder(`./uploads/tempfolder/thumbnails/`);
+
     //비디오 정보 가져오기
     ffmpeg.ffprobe(req.body.url, function (err, metadata) {
         //ffprobe는 ffmpeg 받을때 같이 딸려오는것
         fileDuration = metadata.format.duration;
     })
-    let convert = 'uploads/tempfolder/output.mp4' //저장경로/ 파일명
-    console.log(req.body.url);
+
+    let convert = `uploads/tempfolder/converted/${req.body.fileName}` //저장경로/ 파일명
     ffmpeg(req.body.url)
         .videoCodec('libx264')
         .format('mp4')
         .on('error', (err) => {
             console.log("Video Convert Error" + err)
+            return res.json({ success: false, err })
         })
         .on("end", () => {
-            console.log("Precessing finished")
-        })
-        .saveToFile(convert)
-    // 썸네일 생성
-    ffmpeg(req.body.url) //클라이언트에서 들어온 비디오저장 경로
-        .on('filenames', function (filenames) { //비디오 썸네일 파일명 셍성
-            outputFilenames = filenames
-            filePath = `uploads/${dateToString(new Date(), false)}/thumbnails/` + filenames[0];
-        })
-        .on('end', function () { //썸네일이 전부 생성되고 난 다음에 무엇을 할것인지
-            console.log("ScreenShot Taken");
+            fs.unlinkSync(req.body.url);
             return res.json({
                 success: true
                 , url: filePath
                 , fileDuration: fileDuration
                 , filenames: outputFilenames
+                , newFilePath: convert
             })
+        })
+        .save(convert)
+    // 썸네일 생성
+    ffmpeg(req.body.url) //클라이언트에서 들어온 비디오저장 경로
+        .on('filenames', function (filenames) { //비디오 썸네일 파일명 셍성
+            outputFilenames = filenames
+            filePath = `uploads/tempfolder/thumbnails/` + filenames[0];
+        })
+        .on('end', function () { //썸네일이 전부 생성되고 난 다음에 무엇을 할것인지
+            console.log("ScreenShot Taken");
         })
         .on('error', function (err) { //에러가 났을시
             console.error(err);
-            return res.json({ success: false, err })
         })
         .screenshot({ //
             count: 1, //1개의 썸네일 가능
-            folder: `uploads/${dateToString(new Date(), false)}/thumbnails/`,//업로드 경로
+            folder: `uploads/tempfolder/thumbnails/`,//업로드 경로
             size: '320x240', //사이즈
             filename: '%b-thumbnail.png' //파일명 %b는 extension을 뺀 파일 네임
         })
@@ -237,6 +241,8 @@ router.post(`/video/save`, (req, res) => {
     // 썸네일 저장될 폴더
     makeFolder(`./uploads/${newPath}/thumbnail`)
     //동영상 파일 옮김
+    console.log(req.body.path);
+    console.log(oldPath);
     fs.rename(oldPath, `uploads/${newPath}/${filename}`, function () {
         console.log(`${dateToString(new Date(), true)} ==> video success`)
     })
