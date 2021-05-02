@@ -117,35 +117,64 @@ router.post('/files/list', (req, res) => {
     let limit = req.body.limit ? parseInt(req.body.limit) : 20;
     let skip = req.body.skip ? parseInt(req.body.skip) : 0;
     let cloudpath = req.body.cloudpath ? req.body.cloudpath : 'ALL';
-    //let term = req.body.searchTerm; 검색어
-
+    let searchContents = req.body.searchContents;
+    let { searchTerm, startDate, endDate, minSize, maxSize, type, path } = searchContents;
+    /* searchContents
+     * searchTerm : 검색어
+     * startDate : 기간 시작날짜
+     * endDate : 기간 종료
+     * minSize : 최소사이즈
+     * maxSize : 최대 사이즈
+     * type : 유형
+     * path : 경로
+     * **/
     //필터 적용하기 req.body.filters
     let findArgs = {
-        cloudpath: cloudpath,
-        $or: [
+        cloudpath: cloudpath, //경로
+        $or: [ //유형
             { mimetype: "Folder" }
             , { mimetype: { "$regex": theme === "all" ? '' : theme } }
-        ]
+        ],
     };
-    // for (let key in req.body.filters) {
+    let searchArgs = {}
+    if (searchTerm) searchArgs.originalname = { "$regex": searchTerm }
+    if (path) searchArgs.cloudpath = path;
+    if (startDate) searchArgs.createdAt = { "$gte": new Date(startDate), "$lte": new Date(endDate) };
+    if (minSize) searchArgs = { ...searchArgs, size: { "$gte": minSize } };
+    if (maxSize) searchArgs = { ...searchArgs, size: { ...searchArgs.size, "$lte": maxSize } };
+    if (type) searchArgs.mimetype = type;
 
-    // }
+    if (Object.keys(searchContents).length > 0) {
+        File
+            .find(searchArgs) //폴더경로 검색
+            .populate('writer')
+            .skip(skip)
+            //파일 중요도, 파일명, 아이디, 생성일자로 정렬
+            .sort({ "importance": 1, "filename": 1, "_id": 1, "createdAt": -1, })
+            .limit(limit)
+            .exec((err, fileList) => {
+                if (err) return res.status(400).json({ success: false, err })
+                return res.status(200).json({ success: true, fileList, postSize: fileList.length, totalCount: fileList.length })
+            })
+    } else {
+        File
+            .find(findArgs) //폴더경로 검색
+            .populate('writer')
+            .skip(skip)
+            //파일 중요도, 파일명, 아이디, 생성일자로 정렬
+            .sort({ "importance": 1, "filename": 1, "_id": 1, "createdAt": -1, })
+            .limit(limit)
+            .exec((err, fileList) => {
+                if (err) return res.status(400).json({ success: false, err })
+                return res.status(200).json({ success: true, fileList, postSize: fileList.length, totalCount: fileList.length })
+            })
+    }
+
     let totalCount = 0;
-    File.count(findArgs, (err, count) => {
-        totalCount = count
-    })
-    File
-        .find(findArgs) //폴더경로 검색
-        .find()
-        .populate('writer')
-        .skip(skip)
-        //파일 중요도, 파일명, 아이디, 생성일자로 정렬
-        .sort({ "importance": 1, "filename": 1, "_id": 1, "createdAt": -1, })
-        .limit(limit)
-        .exec((err, fileList) => {
-            if (err) return res.status(400).json({ success: false, err })
-            res.status(200).json({ success: true, fileList, postSize: fileList.length, totalCount: totalCount })
-        })
+    // File.count(findArgs, (err, count) => {
+    //     totalCount = count
+    // })
+
 })
 
 /**************************** 파일 삭제 시작*******************************/
