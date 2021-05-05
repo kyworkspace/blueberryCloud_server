@@ -142,7 +142,7 @@ router.post('/files/list', (req, res) => {
     if (startDate) searchArgs.createdAt = { "$gte": new Date(startDate), "$lte": new Date(endDate) };
     if (minSize) searchArgs = { ...searchArgs, size: { "$gte": minSize } };
     if (maxSize) searchArgs = { ...searchArgs, size: { ...searchArgs.size, "$lte": maxSize } };
-    if (type) searchArgs.mimetype = type;
+    if (type) searchArgs.mimetype = { "$regex": type };
 
     if (Object.keys(searchContents).length > 0) {
         File
@@ -150,7 +150,7 @@ router.post('/files/list', (req, res) => {
             .populate('writer')
             .skip(skip)
             //파일 중요도, 파일명, 아이디, 생성일자로 정렬
-            .sort({ "importance": 1, "filename": 1, "_id": 1, "createdAt": -1, })
+            .sort({ "importance": 1, "createdAt": -1, "filename": 1, "_id": 1, })
             .limit(limit)
             .exec((err, fileList) => {
                 if (err) return res.status(400).json({ success: false, err })
@@ -162,26 +162,29 @@ router.post('/files/list', (req, res) => {
             .populate('writer')
             .skip(skip)
             //파일 중요도, 파일명, 아이디, 생성일자로 정렬
-            .sort({ "importance": 1, "filename": 1, "_id": 1, "createdAt": -1, })
+            .sort({ "importance": 1, "createdAt": -1, "filename": 1, "_id": 1, })
             .limit(limit)
             .exec((err, fileList) => {
                 if (err) return res.status(400).json({ success: false, err })
                 return res.status(200).json({ success: true, fileList, postSize: fileList.length, totalCount: fileList.length })
             })
     }
-
-    let totalCount = 0;
-    // File.count(findArgs, (err, count) => {
-    //     totalCount = count
-    // })
-
 })
 
 /**************************** 파일 삭제 시작*******************************/
 router.post('/files/delete', (req, res) => {
     let fileList = req.body.fileList;
-
-    File.deleteMany({ _id: { $in: fileList } }, (err, obj) => {
+    fileList.map((item) => {
+        let { originalpath, thumbnailpath } = item;
+        if (originalpath) { //파일삭제
+            fs.readFileSync(originalpath) && fs.unlinkSync(originalpath);
+        }
+        if (thumbnailpath) { // 썸네일 있으면 삭제
+            fs.readFileSync(thumbnailpath) && fs.unlinkSync(thumbnailpath);
+        }
+    })
+    let idList = fileList.map(file => file._id);
+    File.deleteMany({ _id: { $in: idList } }, (err, obj) => {
         if (err) res.status(400).json({ success: false, err });
         return res.status(200).json({ success: true, count: obj.deletedCount });
     })
@@ -270,8 +273,6 @@ router.post(`/video/save`, (req, res) => {
     // 썸네일 저장될 폴더
     makeFolder(`./uploads/${newPath}/thumbnail`)
     //동영상 파일 옮김
-    console.log(req.body.path);
-    console.log(oldPath);
     fs.rename(oldPath, `uploads/${newPath}/${filename}`, function () {
         console.log(`${dateToString(new Date(), true)} ==> video success`)
     })
@@ -295,6 +296,34 @@ router.post(`/video/save`, (req, res) => {
 
 /***********************동영상 업로드 끝**************************************/
 
+/***********************파일 업로드 ************************************** */
+router.post('/file/upload/document', (req, res) => {
+    fileUpload(`./uploads/tempfolder`)(req, res, err => {
+        if (err) {
+            return res.json({ success: false, err }) //리턴 시키면 다시 파일 경로 바꿔줄거임
+        }
+        return res.json({
+            success: true,
+            fileInfo: res.req.file
+        })
+    })
+})
+router.post('/document/save', (req, res) => {
+    let newPath = req.body.originalpath;
+    let oldPath = req.body.path;
+    let filename = req.body.filename;
+    makeFolder(`./uploads/${newPath}`)
 
+    fs.rename(oldPath, `uploads/${newPath}/${filename}`, function () {
+        console.log(`${dateToString(new Date(), true)} ==> File UPlOAD SUCCESS`)
+    })
+    req.body.originalpath = `uploads/${newPath}/${filename}`;
+
+    const file = new File(req.body);
+    file.save((err, fileInfo) => {
+        if (err) return res.status(400).json({ success: false, err });
+        return res.status(200).json({ success: true })
+    })
+})
 
 module.exports = router;
