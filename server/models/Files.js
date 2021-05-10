@@ -46,6 +46,15 @@ const fileSchema = mongoose.Schema({
     writer: { //작성자
         type: Schema.Types.ObjectId,
         ref: 'User'
+    },
+    openrating: {
+        //공개여부
+        // 0 : 전체 공개
+        // 1 : 친구에게만 공개
+        // 2 : 비공개
+
+        type: Number,
+        default: 2
     }
 }, { timestamps: true });
 

@@ -144,30 +144,45 @@ router.post('/files/list', (req, res) => {
     if (maxSize) searchArgs = { ...searchArgs, size: { ...searchArgs.size, "$lte": maxSize } };
     if (type) searchArgs.mimetype = { "$regex": type };
 
+    let totalCount = 0;
+
     if (Object.keys(searchContents).length > 0) {
-        File
-            .find(searchArgs) //폴더경로 검색
-            .populate('writer')
-            .skip(skip)
-            //파일 중요도, 파일명, 아이디, 생성일자로 정렬
-            .sort({ "importance": 1, "createdAt": -1, "filename": 1, "_id": 1, })
-            .limit(limit)
-            .exec((err, fileList) => {
-                if (err) return res.status(400).json({ success: false, err })
-                return res.status(200).json({ success: true, fileList, postSize: fileList.length, totalCount: fileList.length })
-            })
+        File.count(searchArgs, (err, count) => {
+            if (err) return res.status(400).send({ success: false, err })
+            totalCount = count;
+            File
+                .find(searchArgs) //폴더경로 검색
+                .populate('writer')
+                .skip(skip)
+                //파일 중요도, 파일명, 아이디, 생성일자로 정렬
+                .sort({ "importance": 1, "createdAt": -1, "filename": 1, "_id": 1, })
+                .limit(limit)
+                .exec((err, fileList) => {
+                    if (err) return res.status(400).json({ success: false, err })
+                    return res.status(200).json({ success: true, fileList, postSize: fileList.length, totalCount: totalCount })
+                })
+
+        })
+
+
+
     } else {
-        File
-            .find(findArgs) //폴더경로 검색
-            .populate('writer')
-            .skip(skip)
-            //파일 중요도, 파일명, 아이디, 생성일자로 정렬
-            .sort({ "importance": 1, "createdAt": -1, "filename": 1, "_id": 1, })
-            .limit(limit)
-            .exec((err, fileList) => {
-                if (err) return res.status(400).json({ success: false, err })
-                return res.status(200).json({ success: true, fileList, postSize: fileList.length, totalCount: fileList.length })
-            })
+        File.count(findArgs, (err, count) => {
+            if (err) return res.status(400).send({ success: false, err });
+            totalCount = count;
+            File
+                .find(findArgs) //폴더경로 검색
+                .populate('writer')
+                .skip(skip)
+                //파일 중요도, 파일명, 아이디, 생성일자로 정렬
+                .sort({ "importance": 1, "createdAt": -1, "filename": 1, "_id": 1, })
+                .limit(limit)
+                .exec((err, fileList) => {
+                    if (err) return res.status(400).json({ success: false, err })
+                    return res.status(200).json({ success: true, fileList, postSize: fileList.length, totalCount: totalCount })
+                })
+        })
+
     }
 })
 
@@ -323,6 +338,17 @@ router.post('/document/save', (req, res) => {
     file.save((err, fileInfo) => {
         if (err) return res.status(400).json({ success: false, err });
         return res.status(200).json({ success: true })
+    })
+});
+
+//파일 상세 정보 수정
+router.post('/file/update', (req, res) => {
+    let { _id, description, openrating } = req.body;
+    File.updateOne({ _id: _id }, {
+        $set: { description: description, openrating: openrating }
+    }, (err, response) => {
+        if (err) return res.status(400).json({ success: false, err });
+        return res.status(200).json({ success: true });
     })
 })
 

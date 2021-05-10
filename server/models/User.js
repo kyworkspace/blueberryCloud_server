@@ -18,10 +18,6 @@ const userSchema = mongoose.Schema({
         type: String,
         minlength: 5
     },
-    lastname: {
-        type: String,
-        maxlength: 50,
-    },
     role: {
         type: Number,
         default: 0
@@ -32,6 +28,21 @@ const userSchema = mongoose.Schema({
     },
     tokenExp: { //토큰 유효기간
         type: Number
+    },
+    phoneNumber: {
+        type: String,
+    },
+    profileImage: { //프로필 이미지
+        type: String,
+    },
+    backgroundImage: { //배경 이미지
+        type: String
+    },
+    hobby: {
+        type: Array
+    },
+    birthDay: {
+        type: String
     }
 });
 
