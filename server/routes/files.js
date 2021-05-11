@@ -4,9 +4,6 @@ const multer = require('multer');
 const fs = require('fs');
 const { File } = require('../models/Files');
 const ffmpeg = require("fluent-ffmpeg");
-var formidable = require('formidable');
-const { ffprobe } = require('fluent-ffmpeg');
-
 //사진 올릴때 쓸 multer Storage
 //이미지를 여러개 받을때는 array('키',최대 갯수)로 한다. 하면 되는데 안되서...files를 map으로 돌려서 업로드 하도록 함
 let fileUpload = (filePath) => {
@@ -50,6 +47,12 @@ const dateToString = (dateTime, Hyphen) => {
         return year + month + day;
     }
 }
+// 초기 폴더 구축
+makeFolder('./uploads/tempfolder/')
+//영상 임시 저장 루트
+makeFolder(`./uploads/tempfolder/converted`);
+//썸네일 임시저장 루트
+makeFolder(`./uploads/tempfolder/thumbnails/`);
 
 
 router.post('/file/upload/pictures', (req, res) => {
@@ -58,7 +61,6 @@ router.post('/file/upload/pictures', (req, res) => {
     //var form = formidable.IncomingForm();
     // 폴더가 있는지 없는지 확인 & 생성
     // 날짜 별로 폴더 생성 및 저장.. 사용자 ID 가져와서 유동적으로 바꾸고 싶은데 왜 안되는지 모르겠음...
-    makeFolder(`./uploads/tempfolder`)
     fileUpload(`uploads/tempfolder`)(req, res, (err) => {
         //실패했을때
         if (err) return res.json({ success: false, err });
@@ -211,10 +213,7 @@ router.post('/file/upload/video/thumbnail', (req, res) => {
     let filePath = "";
     let fileDuration = "";
     let outputFilenames = [];
-    //영상 임시 저장 루트
-    makeFolder(`./uploads/tempfolder/converted`);
-    //썸네일 임시저장 루트
-    makeFolder(`./uploads/tempfolder/thumbnails/`);
+
 
     //비디오 정보 가져오기
     ffmpeg.ffprobe(req.body.url, function (err, metadata) {
@@ -262,7 +261,6 @@ router.post('/file/upload/video/thumbnail', (req, res) => {
 })
 // 파일 업로드
 router.post('/file/upload/video', (req, res) => {
-    makeFolder(`./uploads/tempfolder`)
     // 비디오 파일을 루트 폴더에 업로드 한다.
     fileUpload(`./uploads/tempfolder`)(req, res, err => {
         if (err) {
