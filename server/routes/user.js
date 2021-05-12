@@ -65,7 +65,8 @@ router.get('/auth', auth, (req, res) => {
         role: req.user.role,
         profileImage: req.user.profileImage,
         backgroundImage: req.user.backgroundImage,
-        birthDay: req.user.birthDay
+        birthDay: req.user.birthDay,
+        phoneNumber: req.user.phoneNumber,
     })
 })
 
