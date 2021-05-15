@@ -67,6 +67,7 @@ router.get('/auth', auth, (req, res) => {
         backgroundImage: req.user.backgroundImage,
         birthDay: req.user.birthDay,
         phoneNumber: req.user.phoneNumber,
+        greeting: req.user.greeting,
     })
 })
 

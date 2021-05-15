@@ -56,8 +56,8 @@ router.post('/image/save', auth, async (req, res) => {
 //프로필 수정
 router.post(`/info/update`, auth, async (req, res) => {
     let { _id } = req.user;
-    const { email, birthDay, phoneNumber } = req.body;
-    User.findOneAndUpdate({ _id: _id }, { email, birthDay, phoneNumber }, (err, profile) => {
+    const { email, birthDay, phoneNumber, greeting } = req.body;
+    User.findOneAndUpdate({ _id: _id }, { email, birthDay, phoneNumber, greeting }, (err, profile) => {
         if (err) return res.json({ success: false, err });
         return res.status(200).send({
             success: true

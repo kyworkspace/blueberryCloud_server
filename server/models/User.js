@@ -37,6 +37,10 @@ const userSchema = mongoose.Schema({
     backgroundImage: { //배경 이미지
         type: String
     },
+    greeting: {
+        type: String,
+        length: 50
+    },
     hobby: {
         type: Array
     },
