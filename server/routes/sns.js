@@ -5,19 +5,13 @@ const { File } = require('../models/Files');
 
 router.post('/timeline/list', async (req, res) => {
     let { limit, skip, userId } = req.body;
-
+    let id = "605893111e9ec505b89fe02e" //친구 아이디 목록 가져와야함
     let findArgs = {
-        writer: userId, //경로
-        // $or: [ //유형
-        //     {
-        //         mimetype: { "$regex": 'image' },
-        //         mimetype: { "$regex": 'video' },
-        //     },
-        // ],
-        openrating: { $in: [0, 1] }
-
+        $or: [
+            { openrating: { $in: [0] } },
+            { $and: [{ writer: id }, { openrating: 1 }] }
+        ]
     };
-
     await File
         .find(findArgs) //폴더경로 검색
         .populate('writer')

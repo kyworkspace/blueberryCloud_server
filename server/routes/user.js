@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { User } = require('../models/User');
 const { auth } = require('../middleware/auth');
+const { File } = require('../models/Files');
+const { getUserList } = require('../Controller/userController');
+const { getFileList } = require('../Controller/fileController');
 
 router.post("/register", (req, res) => {
     //회원가입할때 필요한 정보를 client에서 가져오면
@@ -83,6 +86,35 @@ router.get('/logout', auth, (req, res) => {
                 success: true
             })
         })
+})
+
+// 회원 목록 가져옴
+router.post('/list', auth, async (req, res) => {
+    let { searchTerm,
+        limit,
+        skip,
+    } = req.body;
+    let findArgs = {
+        $or: [ //유형
+            { name: { "$regex": searchTerm } }
+            , { email: { "$regex": searchTerm } }
+            , { phoneNumber: { "$regex": searchTerm } }
+        ],
+        _id: { $ne: req.user._id }
+
+    }
+    let userList = await getUserList(findArgs, limit, skip).catch(err => res.status(200).send({ success: false }));
+    let fileList = await getFileList(userList).catch(err => res.status(200).send({ success: false }));
+    userList.map(item => {
+        let fileCount = fileList.filter(x => String(x.writer) === String(item._id));
+        if (fileCount) {
+            item.totalPost = fileCount.length;
+        } else {
+            item.totalPost = 0;
+        }
+        return item;
+    });
+    return res.status(200).send({ success: true, list: userList })
 })
 
 module.exports = router;

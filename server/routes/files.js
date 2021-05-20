@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const fs = require('fs');
 const { File } = require('../models/Files');
+const { auth } = require('../middleware/auth');
 const ffmpeg = require("fluent-ffmpeg");
 //사진 올릴때 쓸 multer Storage
 //이미지를 여러개 받을때는 array('키',최대 갯수)로 한다. 하면 되는데 안되서...files를 map으로 돌려서 업로드 하도록 함
@@ -114,7 +115,7 @@ router.post('/folder/create', (req, res) => {
 /**
  * 파일 리스트 가져오기
  * **/
-router.post('/files/list', (req, res) => {
+router.post('/files/list', auth, (req, res) => {
     let theme = req.body.theme;
     let limit = req.body.limit ? parseInt(req.body.limit) : 20;
     let skip = req.body.skip ? parseInt(req.body.skip) : 0;
@@ -132,6 +133,7 @@ router.post('/files/list', (req, res) => {
      * **/
     //필터 적용하기 req.body.filters
     let findArgs = {
+        writer: req.user._id,
         cloudpath: cloudpath, //경로
         $or: [ //유형
             { mimetype: "Folder" }

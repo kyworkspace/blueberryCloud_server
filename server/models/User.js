@@ -46,6 +46,21 @@ const userSchema = mongoose.Schema({
     },
     birthDay: {
         type: String
+    },
+    totalPost: {
+        type: Number
+    },
+    friends: {
+        type: Boolean,
+        default: false
+    },
+    following: {
+        type: Number,
+        default: 0
+    },
+    follower: {
+        type: Number,
+        default: 0
     }
 });
 
