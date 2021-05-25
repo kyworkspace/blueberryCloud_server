@@ -53,7 +53,7 @@ app.use('/api/users', require('./routes/user'));
 app.use('/api/cloud', require('./routes/files'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/sns', require('./routes/sns'));
-app.use('/api/friends', require('./routes/fiends'));
+app.use('/api/friends', require('./routes/friends'));
 
 //로컬 업로드 파일 url과 경로
 app.use('/uploads', express.static('uploads'));
