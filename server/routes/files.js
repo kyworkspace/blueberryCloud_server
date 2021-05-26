@@ -5,6 +5,7 @@ const fs = require('fs');
 const { File } = require('../models/Files');
 const { auth } = require('../middleware/auth');
 const ffmpeg = require("fluent-ffmpeg");
+const { getFileCount, getFileList } = require('../Controller/fileController');
 //사진 올릴때 쓸 multer Storage
 //이미지를 여러개 받을때는 array('키',최대 갯수)로 한다. 하면 되는데 안되서...files를 map으로 돌려서 업로드 하도록 함
 let fileUpload = (filePath) => {
@@ -90,7 +91,7 @@ router.post('/pictures/save', (req, res) => {
         makeFolder(`./uploads/${item.originalpath}`)
         let oldpath = item.path;
         let newPath = `uploads/${item.originalpath}/${item.filename}`;
-        fs.rename(oldpath, newPath, () => { })
+        fs.renameSync(oldpath, newPath)
         item.originalpath = newPath;
     })
     File.insertMany(fileList).then(
@@ -115,7 +116,7 @@ router.post('/folder/create', (req, res) => {
 /**
  * 파일 리스트 가져오기
  * **/
-router.post('/files/list', auth, (req, res) => {
+router.post('/files/list', auth, async (req, res) => {
     let theme = req.body.theme;
     let limit = req.body.limit ? parseInt(req.body.limit) : 20;
     let skip = req.body.skip ? parseInt(req.body.skip) : 0;
@@ -149,45 +150,15 @@ router.post('/files/list', auth, (req, res) => {
     if (type) searchArgs.mimetype = { "$regex": type };
 
     let totalCount = 0;
-
+    let fileList;
     if (Object.keys(searchContents).length > 0) {
-        File.count(searchArgs, (err, count) => {
-            if (err) return res.status(400).send({ success: false, err })
-            totalCount = count;
-            File
-                .find(searchArgs) //폴더경로 검색
-                .populate('writer')
-                .skip(skip)
-                //파일 중요도, 파일명, 아이디, 생성일자로 정렬
-                .sort({ "importance": 1, "createdAt": -1, "filename": 1, "_id": 1, })
-                .limit(limit)
-                .exec((err, fileList) => {
-                    if (err) return res.status(400).json({ success: false, err })
-                    return res.status(200).json({ success: true, fileList, postSize: fileList.length, totalCount: totalCount })
-                })
-
-        })
-
-
-
+        totalCount = await getFileCount(searchArgs).catch(err => res.status(400).send({ success: false }));
+        fileList = await getFileList(searchArgs, skip, limit).catch(err => res.status(400).send({ success: false }));
     } else {
-        File.count(findArgs, (err, count) => {
-            if (err) return res.status(400).send({ success: false, err });
-            totalCount = count;
-            File
-                .find(findArgs) //폴더경로 검색
-                .populate('writer')
-                .skip(skip)
-                //파일 중요도, 파일명, 아이디, 생성일자로 정렬
-                .sort({ "importance": 1, "createdAt": -1, "filename": 1, "_id": 1, })
-                .limit(limit)
-                .exec((err, fileList) => {
-                    if (err) return res.status(400).json({ success: false, err })
-                    return res.status(200).json({ success: true, fileList, postSize: fileList.length, totalCount: totalCount })
-                })
-        })
-
+        totalCount = await getFileCount(findArgs).catch(err => { return res.status(400).send({ success: false }) });
+        fileList = await getFileList(findArgs, skip, limit).catch(err => { return res.status(400).send({ success: false }) });
     }
+    return res.status(200).send({ success: true, fileList, totalCount })
 })
 
 /**************************** 파일 삭제 시작*******************************/
@@ -223,25 +194,7 @@ router.post('/file/upload/video/thumbnail', (req, res) => {
         fileDuration = metadata.format.duration;
     })
 
-    let convert = `uploads/tempfolder/converted/${req.body.fileName}` //저장경로/ 파일명
-    ffmpeg(req.body.url)
-        .videoCodec('libx264')
-        .format('mp4')
-        .on('error', (err) => {
-            console.log("Video Convert Error" + err)
-            return res.json({ success: false, err })
-        })
-        .on("end", () => {
-            fs.unlinkSync(req.body.url);
-            return res.json({
-                success: true
-                , url: filePath
-                , fileDuration: fileDuration
-                , filenames: outputFilenames
-                , newFilePath: convert
-            })
-        })
-        .save(convert)
+
     // 썸네일 생성
     ffmpeg(req.body.url) //클라이언트에서 들어온 비디오저장 경로
         .on('filenames', function (filenames) { //비디오 썸네일 파일명 셍성
@@ -249,10 +202,17 @@ router.post('/file/upload/video/thumbnail', (req, res) => {
             filePath = `uploads/tempfolder/thumbnails/` + filenames[0];
         })
         .on('end', function () { //썸네일이 전부 생성되고 난 다음에 무엇을 할것인지
-            console.log("ScreenShot Taken");
+            return res.json({
+                success: true
+                , url: filePath
+                , fileDuration: fileDuration
+                , filenames: outputFilenames
+            })
         })
         .on('error', function (err) { //에러가 났을시
             console.error(err);
+            return res.json({ success: false, err })
+
         })
         .screenshot({ //
             count: 1, //1개의 썸네일 가능
@@ -305,7 +265,36 @@ router.post(`/video/save`, (req, res) => {
         return res.status(200).json({ success: true })
     })
 })
-
+/***********   비디오 파일 컨버팅 *****************************/
+router.post('/file/video/convert', async (req, res) => {
+    let { SelectedFile } = req.body;
+    let { originalpath, filename, _id } = SelectedFile;
+    File.findOneAndUpdate({ _id: _id }, { converting: true }, (err, file) => {
+        if (err) console.log(`${_id} 컨버팅중 오류 발생`);
+        let convert = `uploads/tempfolder/converted/${filename}` //저장경로/ 파일명
+        let newSize = 0;
+        ffmpeg(originalpath)
+            .videoCodec('libx264')
+            .format('mp4')
+            .on('error', (err) => {
+                console.log(_id + " Video Convert Error" + err)
+                // return res.json({ success: false, err })
+                // 사용자 알림으로 컨버팅 메세지 보내기
+            })
+            .on("end", async () => {
+                await fs.unlinkSync(originalpath); //기존 파일 삭제
+                await ffmpeg.ffprobe(convert, function (err, metadata) {
+                    //ffprobe는 ffmpeg 받을때 같이 딸려오는것
+                    newSize = metadata.format.size;
+                    File.findOneAndUpdate({ _id: _id }, { converting: false, size: newSize }, (err, file) => {
+                        fs.renameSync(convert, originalpath);
+                        //사용자 알림으로 컨버팅 메세지 보내기
+                    })
+                })
+            })
+            .save(convert)
+    })
+})
 
 
 

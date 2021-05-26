@@ -4,7 +4,7 @@ const { User } = require('../models/User');
 const { auth } = require('../middleware/auth');
 const { File } = require('../models/Files');
 const { getUserList } = require('../Controller/userController');
-const { getFileList } = require('../Controller/fileController');
+const { getUserFileList } = require('../Controller/fileController');
 const { getFriendList } = require('../Controller/friendController');
 
 router.post("/register", (req, res) => {
@@ -106,7 +106,7 @@ router.post('/list', auth, async (req, res) => {
     }
     let userList = await getUserList(findArgs, limit, skip).catch(err => res.status(200).send({ success: false }));
     let friendList = await getFriendList({ $in: [1, 3] }, req.user).catch(err => res.status(200).send({ success: false }));
-    let fileList = await getFileList(userList).catch(err => res.status(200).send({ success: false }));
+    let fileList = await getUserFileList(userList).catch(err => res.status(200).send({ success: false }));
     userList.map(item => {
         let fileCount = fileList.filter(x => String(x.writer) === String(item._id));
         if (fileCount) {

@@ -3,7 +3,7 @@ const router = express.Router();
 const { Friends } = require('../models/Friends');
 const { auth } = require('../middleware/auth');
 const { getFriendList } = require('../Controller/friendController');
-const { getFileList } = require('../Controller/fileController')
+const { getUserFileList } = require('../Controller/fileController')
 
 router.post('/add', auth, (req, res) => {
     let adder = req.user._id;
@@ -51,7 +51,7 @@ router.post('/handler', auth, (req, res) => {
 router.post('/list', auth, async (req, res) => {
     let { level } = req.body;
     let friendList = await getFriendList(level, req.user).catch(err => { return res.status(400).send({ success: false }) })
-    let fileList = await getFileList(friendList).catch(err => res.status(200).send({ success: false }));
+    let fileList = await getUserFileList(friendList).catch(err => res.status(400).send({ success: false }));
     friendList.map(item => {
         let fileCount = fileList.filter(x => String(x.writer) === String(item._id));
         if (fileCount) {

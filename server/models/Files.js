@@ -55,6 +55,11 @@ const fileSchema = mongoose.Schema({
 
         type: Number,
         default: 2
+    },
+    converting: {
+        //비디오 컨버팅 중
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 
