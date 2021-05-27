@@ -57,6 +57,7 @@ app.use('/api/friends', require('./routes/friends'));
 
 //로컬 업로드 파일 url과 경로
 app.use('/uploads', express.static('uploads'));
+app.use('/basicBackground', express.static('BasicBackground'));
 
 if (process.env.NODE_ENV === "production") {
     app.use(express.static("client/build"));
@@ -69,5 +70,3 @@ if (process.env.NODE_ENV === "production") {
 app.listen(port, () => {
     console.log(`app listening at http://localhost:${port}`)
 })
-
-module.exports = { bodyParser }

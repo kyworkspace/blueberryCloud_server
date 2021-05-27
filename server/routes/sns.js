@@ -2,14 +2,15 @@ const express = require('express');
 const router = express.Router();
 const { auth } = require('../middleware/auth');
 const { File } = require('../models/Files');
+const { getFriendList } = require('../Controller/friendController')
 
-router.post('/timeline/list', async (req, res) => {
-    let { limit, skip, userId } = req.body;
-    let id = "605893111e9ec505b89fe02e" //친구 아이디 목록 가져와야함
+router.post('/timeline/list', auth, async (req, res) => {
+    let { limit, skip } = req.body;
+    let friendsList = await getFriendList([1, 3], req.user)  //친구 아이디 목록 가져와야함
     let findArgs = {
         $or: [
             { openrating: { $in: [0] } },
-            { $and: [{ writer: id }, { openrating: 1 }] }
+            { $and: [{ writer: { $in: [req.user._id, ...friendsList] } }, { openrating: 1 }] }
         ]
     };
     await File
