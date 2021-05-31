@@ -1,6 +1,6 @@
 const { File } = require('../models/Files');
 
-const getUserFileList = async (userList) => {
+const getUserFileList = (userList) => {
     let idList = userList.map(item => (item._id));
     return new Promise((resolve, reject) => {
         File.find(
@@ -16,7 +16,7 @@ const getUserFileList = async (userList) => {
     })
 };
 
-const getFileList = async (findArgs, skip, limit) => {
+const getFileList = (findArgs, skip, limit) => {
 
     return new Promise((resolve, reject) => {
         File
@@ -33,7 +33,7 @@ const getFileList = async (findArgs, skip, limit) => {
 
     })
 }
-const getFileCount = async (findArgs) => {
+const getFileCount = (findArgs) => {
     return new Promise((resolve, reject) => {
         File.count(findArgs, (err, count) => {
             if (err) reject(err);

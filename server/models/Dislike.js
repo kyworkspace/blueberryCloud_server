@@ -13,7 +13,7 @@ const dislikeSchema = mongoose.Schema({
     },
     contentsId: {
         type: Schema.Types.ObjectId,
-        ref: 'Video'
+        ref: 'File'
     }
 
 }, { timestamps: true });
