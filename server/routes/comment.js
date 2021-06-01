@@ -24,5 +24,25 @@ router.post('/post', (req, res) => {
     })
 })
 
+router.post('/update', async (req, res) => {
+    let { id, content } = req.body
+    await Comment.findOneAndUpdate(
+        { _id: id },
+        { $set: { content: content } }
+        , { new: true }
+        , (err, comment) => {
+            if (err) return res.status(400).send({ success: false });
+            return res.status(200).send({ success: true })
+        })
+});
+router.post('/delete', async (req, res) => {
+    let { id } = req.body
+    Comment.findOneAndDelete({ _id: id })
+        .exec((err, result) => {
+            if (err) return res.status(400).send({ success: false });
+            return res.status(200).send({ success: true })
+        })
+})
+
 
 module.exports = router;

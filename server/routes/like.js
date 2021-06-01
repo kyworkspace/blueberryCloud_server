@@ -39,12 +39,12 @@ router.post("/getDislikes", (req, res) => {
 })
 
 router.post("/upLike", (req, res) => {
-    let { contentsId, commentId, userId } = req.body
+    let { contentsId, commentId, userId, userTo } = req.body
     let variable = {};
     if (req.body.contentsId) {
-        variable = { contentsId, userId }
+        variable = { contentsId, userId, userTo }
     } else {
-        variable = { commentId, userId }
+        variable = { commentId, userId, userTo }
     }
 
     //Like Collection에 클릭 정보를 넣어줄것

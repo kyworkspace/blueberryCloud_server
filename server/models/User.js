@@ -61,6 +61,10 @@ const userSchema = mongoose.Schema({
     follower: {
         type: Number,
         default: 0
+    },
+    cloudSize: {
+        type: Number,
+        default: 10
     }
 });
 

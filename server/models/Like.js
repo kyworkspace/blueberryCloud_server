@@ -13,7 +13,11 @@ const likeSchema = mongoose.Schema({
     },
     contentsId: {
         type: Schema.Types.ObjectId,
-        ref: 'Video'
+        ref: 'File'
+    },
+    userTo: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
     }
 
 }, { timestamps: true });
