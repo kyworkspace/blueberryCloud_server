@@ -72,6 +72,7 @@ router.get('/auth', auth, (req, res) => {
         birthDay: req.user.birthDay,
         phoneNumber: req.user.phoneNumber,
         greeting: req.user.greeting,
+        cloudSize: req.user.cloudSize,
     })
 })
 

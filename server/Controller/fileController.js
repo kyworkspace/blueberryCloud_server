@@ -41,9 +41,23 @@ const getFileCount = (findArgs) => {
         })
     })
 }
+const getTotalSize = (userId) => {
+    return new Promise((resolve, reject) => {
+        File.find({ writer: userId })
+            .exec((err, list) => {
+                if (err) reject(err);
+                let totalSize = 0;
+                list.map(item => {
+                    totalSize += item.size;
+                })
+                resolve(totalSize);
+            })
+    })
+}
 
 module.exports = {
     getUserFileList,
     getFileCount,
-    getFileList
+    getFileList,
+    getTotalSize
 }

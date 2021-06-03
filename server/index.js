@@ -56,6 +56,7 @@ app.use('/api/sns', require('./routes/sns'));
 app.use('/api/friends', require('./routes/friends'));
 app.use('/api/like', require('./routes/like'));
 app.use('/api/comment', require('./routes/comment'));
+app.use('/api/dashboard', require('./routes/dashboard'));
 
 //로컬 업로드 파일 url과 경로
 app.use('/uploads', express.static('uploads'));
