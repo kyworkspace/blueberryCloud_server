@@ -67,12 +67,18 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/uploads', express.static(`${CloudFileMotherPath}`));
 app.use('/basicBackground', express.static('BasicBackground'));
 
+// 빌드할때 해당 부분 삭제할것~!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+app.use(express.static("C:/React/blueberrycloud_front/build"));
+app.get('/', (req, res) => {
+    res.send(express.static("C:/React/blueberrycloud_front/build/index.html"));
+})
+/////////////////////////////////////////////////////////////////////////////////////////
+
 if (process.env.NODE_ENV === "production") {
     app.use(express.static("C:/React/blueberrycloud_front/build"));
     app.get('/', (req, res) => {
         res.send(express.static("C:/React/blueberrycloud_front/build/index.html"));
     })
-
     // app.get("*", (req, res) => {
     //     res.sendFile(path.resolve(__dirname, "../client", "build", "index.html"));
     // });
