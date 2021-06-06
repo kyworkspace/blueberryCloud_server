@@ -6,6 +6,8 @@ const { File } = require('../models/Files');
 const { auth } = require('../middleware/auth');
 const ffmpeg = require("fluent-ffmpeg");
 const { getFileCount, getFileList } = require('../Controller/fileController');
+const { makeFolder, CloudFileMotherPath } = require('../config/fileInit');
+
 //사진 올릴때 쓸 multer Storage
 //이미지를 여러개 받을때는 array('키',최대 갯수)로 한다. 하면 되는데 안되서...files를 map으로 돌려서 업로드 하도록 함
 let fileUpload = (filePath) => {
@@ -31,12 +33,7 @@ let fileUpload = (filePath) => {
     return upload;
 }
 
-const makeFolder = (dir) => {
-    if (!fs.existsSync(dir)) {
-        //없으면 폴더 생성
-        fs.mkdirSync(dir, { recursive: true });
-    }
-}
+
 const dateToString = (dateTime, Hyphen) => {
     let date = new Date(dateTime)
     const year = date.getFullYear();
@@ -49,12 +46,7 @@ const dateToString = (dateTime, Hyphen) => {
         return year + month + day;
     }
 }
-// 초기 폴더 구축
-makeFolder('./uploads/tempfolder/')
-//영상 임시 저장 루트
-makeFolder(`./uploads/tempfolder/converted`);
-//썸네일 임시저장 루트
-makeFolder(`./uploads/tempfolder/thumbnails/`);
+
 
 
 router.post('/file/upload/pictures', (req, res) => {
@@ -63,9 +55,10 @@ router.post('/file/upload/pictures', (req, res) => {
     //var form = formidable.IncomingForm();
     // 폴더가 있는지 없는지 확인 & 생성
     // 날짜 별로 폴더 생성 및 저장.. 사용자 ID 가져와서 유동적으로 바꾸고 싶은데 왜 안되는지 모르겠음...
-    fileUpload(`uploads/tempfolder`)(req, res, (err) => {
+    fileUpload(`${CloudFileMotherPath}/tempfolder`)(req, res, (err) => {
         //실패했을때
         if (err) return res.json({ success: false, err });
+        res.req.file.hostPath = `uploads/tempfolder/${res.req.file.filename}`
         return res.json({ success: true, fileInfo: res.req.file })
         /***
        * 성공했을때 파일정보를 전달 fileInfo
@@ -88,11 +81,12 @@ router.post('/file/upload/pictures', (req, res) => {
 router.post('/pictures/save', (req, res) => {
     const fileList = req.body;
     fileList.forEach((item) => {
-        makeFolder(`./uploads/${item.originalpath}`)
+        makeFolder(`${CloudFileMotherPath}/${item.originalpath}`)
         let oldpath = item.path;
-        let newPath = `uploads/${item.originalpath}/${item.filename}`;
+        let newPath = `${CloudFileMotherPath}/${item.originalpath}/${item.filename}`;
         fs.renameSync(oldpath, newPath)
-        item.originalpath = newPath;
+        item.logicPath = `uploads/${item.originalpath}/${item.filename}`;
+        item.physicalPath = newPath;
     })
     File.insertMany(fileList).then(
         response => { return res.status(200).json({ success: true }) }
@@ -141,7 +135,9 @@ router.post('/files/list', auth, async (req, res) => {
             , { mimetype: { "$regex": theme === "all" ? '' : theme } }
         ],
     };
-    let searchArgs = {}
+    let searchArgs = {
+        writer: req.user._id
+    }
     if (searchTerm) searchArgs.originalname = { "$regex": searchTerm }
     if (path) searchArgs.cloudpath = path;
     if (startDate) searchArgs.createdAt = { "$gte": new Date(startDate), "$lte": new Date(endDate) };
@@ -165,9 +161,9 @@ router.post('/files/list', auth, async (req, res) => {
 router.post('/files/delete', (req, res) => {
     let fileList = req.body.fileList;
     fileList.map((item) => {
-        let { originalpath, thumbnailpath } = item;
-        if (originalpath) { //파일삭제
-            fs.readFileSync(originalpath) && fs.unlinkSync(originalpath);
+        let { physicalPath, thumbnailpath } = item;
+        if (physicalPath) { //파일삭제
+            fs.readFileSync(physicalPath) && fs.unlinkSync(physicalPath);
         }
         if (thumbnailpath) { // 썸네일 있으면 삭제
             fs.readFileSync(thumbnailpath) && fs.unlinkSync(thumbnailpath);
@@ -183,28 +179,29 @@ router.post('/files/delete', (req, res) => {
 /***********************동영상 업로드 **************************************/
 //썸네일 자동 생성
 router.post('/file/upload/video/thumbnail', (req, res) => {
-    let filePath = "";
+    const thumbnailsPath = `${CloudFileMotherPath}/tempfolder/thumbnails/`;
+    let logicPath = "";
+    let physicalPath = "";
     let fileDuration = "";
     let outputFilenames = [];
-
 
     //비디오 정보 가져오기
     ffmpeg.ffprobe(req.body.url, function (err, metadata) {
         //ffprobe는 ffmpeg 받을때 같이 딸려오는것
         fileDuration = metadata.format.duration;
     })
-
-
     // 썸네일 생성
     ffmpeg(req.body.url) //클라이언트에서 들어온 비디오저장 경로
         .on('filenames', function (filenames) { //비디오 썸네일 파일명 셍성
             outputFilenames = filenames
-            filePath = `uploads/tempfolder/thumbnails/` + filenames[0];
+            logicPath = `uploads/tempfolder/thumbnails/${filenames[0]}`;
+            physicalPath = `${thumbnailsPath}/${filenames[0]}`
         })
         .on('end', function () { //썸네일이 전부 생성되고 난 다음에 무엇을 할것인지
             return res.json({
                 success: true
-                , url: filePath
+                , url: logicPath
+                , physicalPath: physicalPath
                 , fileDuration: fileDuration
                 , filenames: outputFilenames
             })
@@ -216,7 +213,7 @@ router.post('/file/upload/video/thumbnail', (req, res) => {
         })
         .screenshot({ //
             count: 1, //1개의 썸네일 가능
-            folder: `uploads/tempfolder/thumbnails/`,//업로드 경로
+            folder: thumbnailsPath,//업로드 경로
             size: '320x240', //사이즈
             filename: '%b-thumbnail.png' //파일명 %b는 extension을 뺀 파일 네임
         })
@@ -224,11 +221,12 @@ router.post('/file/upload/video/thumbnail', (req, res) => {
 // 파일 업로드
 router.post('/file/upload/video', (req, res) => {
     // 비디오 파일을 루트 폴더에 업로드 한다.
-    fileUpload(`./uploads/tempfolder`)(req, res, err => {
+    fileUpload(`${CloudFileMotherPath}/tempfolder`)(req, res, err => {
         if (err) {
             //client 의 videoUploadPage에서 Line.52 에서 success true로 갈지 아닐지 판단
             return res.json({ success: false, err })
         }
+        res.req.file.hostPath = `uploads/tempfolder/${res.req.file.filename}`;
         return res.json({
             success: true,
             fileInfo: res.req.file
@@ -243,20 +241,24 @@ router.post(`/video/save`, (req, res) => {
     let filename = req.body.filename;
     let thumbnailpath = req.body.thumbnailpath;
     let thumbnailname = req.body.thumbnailname;
+
+    const videoSavePath = `${CloudFileMotherPath}/${newPath}`;
     // 동영상 저장될 폴더
-    makeFolder(`./uploads/${newPath}`)
+    makeFolder(videoSavePath)
     // 썸네일 저장될 폴더
-    makeFolder(`./uploads/${newPath}/thumbnail`)
+    makeFolder(`${videoSavePath}/thumbnail`)
     //동영상 파일 옮김
-    fs.rename(oldPath, `uploads/${newPath}/${filename}`, function () {
+    fs.rename(oldPath, `${videoSavePath}/${filename}`, function () {
         console.log(`${dateToString(new Date(), true)} ==> video success`)
     })
     //썸네일 파일 옮김
-    fs.rename(thumbnailpath, `uploads/${newPath}/thumbnail/${thumbnailname}`, function () {
+    console.log(`${videoSavePath}/thumbnail/${thumbnailname}`)
+    fs.rename(thumbnailpath, `${videoSavePath}/thumbnail/${thumbnailname}`, function () {
         console.log(`${dateToString(new Date(), true)} ==> thumbnail success`)
     })
 
-    req.body.originalpath = `uploads/${newPath}/${filename}`;
+    req.body.logicPath = `uploads/${newPath}/${filename}`;
+    req.body.physicalPath = `${videoSavePath}/${filename}`;
     req.body.thumbnailpath = `uploads/${newPath}/thumbnail/${thumbnailname}`;
 
     const file = new File(req.body);
@@ -268,12 +270,12 @@ router.post(`/video/save`, (req, res) => {
 /***********   비디오 파일 컨버팅 *****************************/
 router.post('/file/video/convert', async (req, res) => {
     let { SelectedFile } = req.body;
-    let { originalpath, filename, _id } = SelectedFile;
+    let { physicalPath, filename, _id } = SelectedFile;
     File.findOneAndUpdate({ _id: _id }, { converting: true }, (err, file) => {
         if (err) console.log(`${_id} 컨버팅중 오류 발생`);
-        let convert = `uploads/tempfolder/converted/${filename}` //저장경로/ 파일명
+        let convert = `${CloudFileMotherPath}/tempfolder/converted/${filename}` //저장경로/ 파일명
         let newSize = 0;
-        ffmpeg(originalpath)
+        ffmpeg(physicalPath)
             .videoCodec('libx264')
             .format('mp4')
             .on('error', (err) => {
@@ -282,12 +284,12 @@ router.post('/file/video/convert', async (req, res) => {
                 // 사용자 알림으로 컨버팅 메세지 보내기
             })
             .on("end", async () => {
-                await fs.unlinkSync(originalpath); //기존 파일 삭제
+                await fs.unlinkSync(physicalPath); //기존 파일 삭제
                 await ffmpeg.ffprobe(convert, function (err, metadata) {
                     //ffprobe는 ffmpeg 받을때 같이 딸려오는것
                     newSize = metadata.format.size;
                     File.findOneAndUpdate({ _id: _id }, { converting: false, size: newSize }, (err, file) => {
-                        fs.renameSync(convert, originalpath);
+                        fs.renameSync(convert, physicalPath);
                         //사용자 알림으로 컨버팅 메세지 보내기
                     })
                 })
@@ -302,7 +304,7 @@ router.post('/file/video/convert', async (req, res) => {
 
 /***********************파일 업로드 ************************************** */
 router.post('/file/upload/document', (req, res) => {
-    fileUpload(`./uploads/tempfolder`)(req, res, err => {
+    fileUpload(`${CloudFileMotherPath}/tempfolder`)(req, res, err => {
         if (err) {
             return res.json({ success: false, err }) //리턴 시키면 다시 파일 경로 바꿔줄거임
         }
@@ -312,16 +314,19 @@ router.post('/file/upload/document', (req, res) => {
         })
     })
 })
-router.post('/document/save', (req, res) => {
+router.post('/document/save', auth, (req, res) => {
     let newPath = req.body.originalpath;
     let oldPath = req.body.path;
     let filename = req.body.filename;
-    makeFolder(`./uploads/${newPath}`)
+    const physicalPath = `${CloudFileMotherPath}/${newPath}/${filename}`;
+    makeFolder(`${CloudFileMotherPath}/${newPath}`)
 
-    fs.rename(oldPath, `uploads/${newPath}/${filename}`, function () {
-        console.log(`${dateToString(new Date(), true)} ==> File UPlOAD SUCCESS`)
+
+    fs.rename(oldPath, physicalPath, function () {
+        console.log(`${dateToString(new Date(), true)} ==> File UPLOAD SUCCESS`)
     })
-    req.body.originalpath = `uploads/${newPath}/${filename}`;
+    req.body.logicPath = `uploads/${newPath}/${filename}`;
+    req.body.physicalPath = physicalPath;
 
     const file = new File(req.body);
     file.save((err, fileInfo) => {
@@ -340,5 +345,7 @@ router.post('/file/update', (req, res) => {
         return res.status(200).json({ success: true });
     })
 })
+
+
 
 module.exports = router;

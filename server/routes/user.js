@@ -25,6 +25,7 @@ router.post("/register", (req, res) => {
 
 router.post('/login', (req, res) => {
     //요청된 이메일을 데이터 베이스에서 있는지 찾는다.
+    console.log(`${new Date().toISOString()}------${req.body.email} 로그인`)
     User.findOne({ email: req.body.email }, (err, user) => { //몽고디비 함수
         if (!user) { //반환된 유저정보가 없는 경우
             return res.json({

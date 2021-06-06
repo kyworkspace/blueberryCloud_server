@@ -10,6 +10,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 
 const config = require('./config/key');
+const { CloudFileMotherPath } = require('./config/fileInit')
 
 //서버 포트 번호
 const port = 5000
@@ -45,6 +46,10 @@ mongoose.connect(config.mongoURI, {
     .catch((err) => console.log(err))
 
 
+const { removeAllComments } = require('./Controller/commentController');
+const { removeAllFiles } = require('./Controller/fileController');
+const { removeAllDisLike, removeAllLike } = require('./Controller/likeController');
+
 app.get('/', (req, res) => {
     res.send('Welcome To BlueBerry CLOUD');
 })
@@ -59,15 +64,29 @@ app.use('/api/comment', require('./routes/comment'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 
 //로컬 업로드 파일 url과 경로
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(`${CloudFileMotherPath}`));
 app.use('/basicBackground', express.static('BasicBackground'));
 
-if (process.env.NODE_ENV === "production") {
-    app.use(express.static("client/build"));
-    app.get("*", (req, res) => {
-        res.sendFile(path.resolve(__dirname, "../client", "build", "index.html"));
-    });
-}
+// if (process.env.NODE_ENV === "production") {
+//     app.use(express.static("client/build"));
+//     app.get("*", (req, res) => {
+//         res.sendFile(path.resolve(__dirname, "../client", "build", "index.html"));
+//     });
+// }
+// 파일 전체 삭제
+app.post('/allRemove', async (req, res) => {
+    console.log('모든 파일을 삭제합니다.')
+    try {
+        await removeAllComments();
+        await removeAllDisLike();
+        await removeAllLike();
+        await removeAllFiles();
+        return res.status(200).send({ success: true })
+    } catch (error) {
+        console.log(error)
+        return res.status(400).send({ success: false })
+    }
+});
 
 
 app.listen(port, () => {

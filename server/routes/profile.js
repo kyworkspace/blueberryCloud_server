@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { User } = require('../models/User');
 const multer = require('multer');
-const fs = require('fs');
 const { auth } = require('../middleware/auth');
+const { makeFolder, CloudFileMotherPath } = require('../config/fileInit');
+
 
 let fileUpload = (filePath) => {
     let str = multer.diskStorage({
@@ -29,19 +30,20 @@ router.post('/image/upload', async (req, res) => {
 })
 //프로필 변경후 폴더 변경
 router.post('/image/save', auth, async (req, res) => {
-    let { file, flag } = req.body;
-    let oldPath = file.path;
-    let newPath = `uploads/${req.user._id}/profile/${file.filename}`;
-    makeFolder(`./uploads/${req.user._id}/profile`);
+    const { file, flag } = req.body;
+    const oldPath = file.path;
+    const hostPath = `uploads/${req.user._id}/profile/${file.filename}`;
+    const physicalPath = `${CloudFileMotherPath}/${req.user._id}/profile`;
+    makeFolder(physicalPath);
     //파일 경로 이동
-    fs.renameSync(oldPath, newPath);
+    fs.renameSync(oldPath, physicalPath);
     let updateTarget = {};
     switch (flag) {
         case 'avatar':
-            updateTarget.profileImage = newPath;
+            updateTarget.profileImage = hostPath;
             break;
         case 'background':
-            updateTarget.backgroundImage = newPath;
+            updateTarget.backgroundImage = hostPath;
             break;
     }
 
@@ -64,12 +66,5 @@ router.post(`/info/update`, auth, async (req, res) => {
         })
     })
 })
-
-const makeFolder = (dir) => {
-    if (!fs.existsSync(dir)) {
-        //없으면 폴더 생성
-        fs.mkdirSync(dir, { recursive: true });
-    }
-}
 
 module.exports = router;

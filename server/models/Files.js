@@ -12,7 +12,10 @@ const fileSchema = mongoose.Schema({
     originalname: { //오리지날 파일명
         type: String,
     },
-    originalpath: { //실제 파일 경로
+    logicPath: { //파일 호스트 경로
+        type: String,
+    },
+    physicalPath: { //파일 실제 경로
         type: String,
     },
     cloudpath: {

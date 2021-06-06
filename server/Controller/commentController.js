@@ -11,7 +11,16 @@ const getCommentList = (findArgs) => {
             })
     })
 }
+const removeAllComments = () => {
+    return new Promise((resolve, reject) => {
+        Comment.deleteMany().exec(err => {
+            if (err) reject(err);
+            resolve({ success: true });
+        })
+    })
+}
 
 module.exports = {
-    getCommentList
+    getCommentList,
+    removeAllComments
 }

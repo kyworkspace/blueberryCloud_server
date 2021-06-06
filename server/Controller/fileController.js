@@ -35,9 +35,9 @@ const getFileList = (findArgs, skip, limit) => {
 }
 const getFileCount = (findArgs) => {
     return new Promise((resolve, reject) => {
-        File.count(findArgs, (err, count) => {
+        File.find(findArgs, (err, list) => {
             if (err) reject(err);
-            resolve(count);
+            resolve(list.length);
         })
     })
 }
@@ -54,10 +54,19 @@ const getTotalSize = (userId) => {
             })
     })
 }
+const removeAllFiles = () => {
+    return new Promise((resolve, reject) => {
+        File.deleteMany().exec(err => {
+            if (err) reject(err);
+            resolve({ success: true });
+        })
+    })
+}
 
 module.exports = {
     getUserFileList,
     getFileCount,
     getFileList,
-    getTotalSize
+    getTotalSize,
+    removeAllFiles
 }
