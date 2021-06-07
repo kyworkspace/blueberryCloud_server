@@ -6,6 +6,8 @@ const { File } = require('../models/Files');
 const { getUserList } = require('../Controller/userController');
 const { getUserFileList } = require('../Controller/fileController');
 const { getFriendList } = require('../Controller/friendController');
+const { generateRandom, emailAuthConfig } = require('../Controller/emailAuthController');
+
 
 router.post("/register", (req, res) => {
     //회원가입할때 필요한 정보를 client에서 가져오면
@@ -125,6 +127,40 @@ router.post('/list', auth, async (req, res) => {
         return item;
     });
     return res.status(200).send({ success: true, list: userList })
+});
+router.post('/dupCheck', (req, res) => {
+    const { email } = req.body;
+
+    User.findOne({ "email": email }, (err, user) => {
+        if (err) return res.status(400).send({ success: false });
+        if (user) {
+            return res.status(200).send({ success: true, available: false });
+        } else {
+            return res.status(200).send({ success: true, available: true });
+        }
+    })
 })
+
+//인증 메일 전송
+router.post('/sendAuthCheckMail', (req, res) => {
+    const { email } = req.body;
+    const number = generateRandom(111111, 999999);
+    const mailOptions = {
+        from: 'blueberry_manager@naver.com',
+        to: email,
+        subject: "[블루베리 클라우드]인증 관련 이메일 입니다",
+        text: "오른쪽 숫자 6자리를 입력해주세요 : " + number
+    };
+    emailAuthConfig.sendMail(mailOptions, (err, info) => {
+        if (err) return res.status(400).send({ success: false })
+        console.log("Auth mail Sended", info.response)
+        emailAuthConfig.close();
+        return res.status(200).send({ success: true, number })
+    })
+
+
+})
+
+
 
 module.exports = router;

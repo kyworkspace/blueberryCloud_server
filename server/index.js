@@ -1,17 +1,14 @@
+//환경 설정
+const dotenv = require("dotenv");
 //서버 설정
 const express = require('express');
 const app = express();
 const path = require('path');
 const cors = require('cors');
 //모델 설정
-const { User } = require('./models/User')
-
-const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-
 const config = require('./config/key');
 const { CloudFileMotherPath } = require('./config/fileInit')
-
 //서버 포트 번호
 const port = 5000
 
@@ -35,6 +32,12 @@ app.use(cookieParser());
 //cors
 app.use(cors());
 
+dotenv.config({
+    path: "./env/.env",
+});
+
+
+
 const mongoose = require('mongoose');
 mongoose.connect(config.mongoURI, {
     //기존에 사용되던 몽구스 서비스가 일부 교체 & 중단 되기 때문에 새로운 모듈을 사용하겠다는 의미
@@ -44,7 +47,6 @@ mongoose.connect(config.mongoURI, {
     useFindAndModify: false
 }).then(() => console.log("Mongo DB Connected..."))
     .catch((err) => console.log(err))
-
 
 const { removeAllComments } = require('./Controller/commentController');
 const { removeAllFiles } = require('./Controller/fileController');
