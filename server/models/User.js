@@ -108,7 +108,6 @@ userSchema.methods.generateToken = function (cb) {
     // plain Object로 변경하기 위해서는 toHexString()
     // user._id + 'secretToken' = token
     // -> 토큰만 있으면 user._id 확인가능
-
     user.token = token;
     user.save(function (err, user) { //mongoDB 적용하는 메서드 save
         if (err) return cb(err);
@@ -121,6 +120,7 @@ userSchema.statics.findByToken = function (token, cb) {
 
     //토큰을 디코드함.
     jwt.verify(token, "secretToken", function (err, decoded) {
+        console.log("decoded, token", decoded, token)
         //유저 아이디를 이용해서 유저를 찾은 다음에
         //클라이언트에서 가져온 token과 DB에 보관된 토큰이 일치하는지 확인
         user.findOne({ "_id": decoded, "token": token }, function (err, user) {

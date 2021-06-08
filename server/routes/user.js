@@ -46,10 +46,16 @@ router.post('/login', (req, res) => {
                 if (err) return res.status(400).send(err);
                 // 토큰을 저장한다. 어디? 쿠키, 로컬 스토리지, 등등에 저장가능
                 // 이번에는 쿠키
-                res.cookie("x_auth", user.token) //이렇게 하면 웹 쿠키 부분에 x_auth 로 저장됨
-                    .status(200) //통신이 정상적일때
-                    .json({ loginSuccess: true, userId: user._id }) //loginSuccess 부분을 true로 하고 user.id 반환 (HexString)
-
+                // res.header('Access-Control-Allow-Credentials', 'true');
+                return res.cookie("x_auth", user.token, {
+                    httpOnly: false,
+                    sameSite: false,
+                    signed: false,
+                    secure: false,
+                })
+                    .status(200)
+                    .json({ loginSuccess: true, userId: user._id })
+                // return res.status(200).json({ loginSuccess: true, userId: user._id, token: user.token })
             })
         })
     })

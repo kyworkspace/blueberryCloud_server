@@ -35,8 +35,8 @@ app.use(cors());
 dotenv.config({
     path: "./env/.env",
 });
-
-
+//프론트쪽 클라이언트 
+const clientApp = path.join(__dirname, '../../BluberryCloud_front/build');
 
 const mongoose = require('mongoose');
 mongoose.connect(config.mongoURI, {
@@ -70,21 +70,23 @@ app.use('/uploads', express.static(`${CloudFileMotherPath}`));
 app.use('/basicBackground', express.static('BasicBackground'));
 
 // 빌드할때 해당 부분 삭제할것~!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-app.use(express.static("C:/React/blueberrycloud_front/build"));
-app.get('/', (req, res) => {
-    res.send(express.static("C:/React/blueberrycloud_front/build/index.html"));
-})
+// app.use(express.static(clientApp));
+// app.get('/', (req, res) => {
+//     console.log("sended?")
+//     res.send(express.static(`${clientApp}/index.html`));
+// })
 /////////////////////////////////////////////////////////////////////////////////////////
 
-if (process.env.NODE_ENV === "production") {
-    app.use(express.static("C:/React/blueberrycloud_front/build"));
-    app.get('/', (req, res) => {
-        res.send(express.static("C:/React/blueberrycloud_front/build/index.html"));
-    })
-    // app.get("*", (req, res) => {
-    //     res.sendFile(path.resolve(__dirname, "../client", "build", "index.html"));
-    // });
-}
+// if (process.env.NODE_ENV === "production") {
+//     app.use(express.static(clientApp));
+//     app.get('/', (req, res) => {
+//         res.send(express.static("C:/React/blueberrycloud_front/build/index.html"));
+//     })
+//     // app.get("*", (req, res) => {
+//     //     res.sendFile(path.resolve(__dirname, "../client", "build", "index.html"));
+//     // });
+// }
+
 // 파일 전체 삭제
 app.post('/allRemove', async (req, res) => {
     console.log('모든 파일을 삭제합니다.')

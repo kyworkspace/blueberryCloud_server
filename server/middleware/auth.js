@@ -13,7 +13,6 @@ let auth = (req, res, next) => {
                 error: true
             });
         }
-
         req.token = token; //리턴된 토큰 저장
         req.user = user;
         next();
