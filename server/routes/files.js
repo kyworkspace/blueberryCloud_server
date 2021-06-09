@@ -58,7 +58,7 @@ router.post('/file/upload/pictures', (req, res) => {
     fileUpload(`${CloudFileMotherPath}/tempfolder`)(req, res, (err) => {
         //실패했을때
         if (err) return res.json({ success: false, err });
-        res.req.file.hostPath = `uploads/tempfolder/${res.req.file.filename}`
+        res.req.file.logicPath = `uploads/tempfolder/${res.req.file.filename}`
         return res.json({ success: true, fileInfo: res.req.file })
         /***
        * 성공했을때 파일정보를 전달 fileInfo

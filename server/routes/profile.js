@@ -3,6 +3,7 @@ const router = express.Router();
 const { User } = require('../models/User');
 const multer = require('multer');
 const { auth } = require('../middleware/auth');
+const fs = require('fs');
 const { makeFolder, CloudFileMotherPath } = require('../config/fileInit');
 
 
@@ -23,7 +24,7 @@ let fileUpload = (filePath) => {
 }
 
 router.post('/image/upload', async (req, res) => {
-    await fileUpload('uploads/tempfolder/')(req, res, (err) => {
+    await fileUpload(`${CloudFileMotherPath}/tempfolder/`)(req, res, (err) => {
         if (err) return res.json({ success: false, err });
         return res.json({ success: true, fileInfo: res.req.file })
     })
@@ -33,26 +34,32 @@ router.post('/image/save', auth, async (req, res) => {
     const { file, flag } = req.body;
     const oldPath = file.path;
     const hostPath = `uploads/${req.user._id}/profile/${file.filename}`;
-    const physicalPath = `${CloudFileMotherPath}/${req.user._id}/profile`;
-    makeFolder(physicalPath);
-    //파일 경로 이동
-    fs.renameSync(oldPath, physicalPath);
-    let updateTarget = {};
-    switch (flag) {
-        case 'avatar':
-            updateTarget.profileImage = hostPath;
-            break;
-        case 'background':
-            updateTarget.backgroundImage = hostPath;
-            break;
+    const physicalPath = `${CloudFileMotherPath}/${req.user._id}/profile/${file.filename}`;
+    makeFolder(`${CloudFileMotherPath}/${req.user._id}/profile`);
+    try {
+        //파일 경로 이동
+        fs.renameSync(oldPath, physicalPath);
+        let updateTarget = {};
+        switch (flag) {
+            case 'avatar':
+                updateTarget.profileImage = hostPath;
+                break;
+            case 'background':
+                updateTarget.backgroundImage = hostPath;
+                break;
+        }
+
+        User.updateOne({ _id: req.user._id }, {
+            $set: updateTarget
+        }, (err, response) => {
+            if (err) return res.status(400).json({ success: false, err });
+            return res.status(200).json({ success: true, url: hostPath });
+        })
+    } catch (error) {
+        console.error(error)
+        return res.status(400).json({ success: false, error });
     }
 
-    User.updateOne({ _id: req.user._id }, {
-        $set: updateTarget
-    }, (err, response) => {
-        if (err) return res.status(400).json({ success: false, err });
-        return res.status(200).json({ success: true, url: newPath });
-    })
 
 })
 //프로필 수정
