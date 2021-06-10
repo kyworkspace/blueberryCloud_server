@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { Like } = require("../models/Like");
 const { Dislike } = require("../models/Dislike");
+const { getLikeList } = require('../Controller/likeController');
+const { auth } = require('../middleware/auth');
+const { getFileList } = require('../Controller/fileController')
 
 //=================================
 //             Like
@@ -110,6 +113,32 @@ router.post("/upDislike", (req, res) => {
                 res.status(200).json({ success: true });
             })
     });
+
+})
+
+router.post('/main/list', auth, async (req, res) => {
+    const { _id } = req.user;
+    try {
+        const filelist = await getFileList({ "writer": _id });
+        const fileIdList = filelist.map(itme => itme._id)
+        const LikeList = await getLikeList({ contentsId: { $in: fileIdList } });
+        const list = LikeList.map(item => {
+            let obj = new Object();
+
+            const file = filelist.find(x => {
+                return String(x._id) === String(item.contentsId)
+            })
+            obj.id = item._id;
+            obj.user = item.userId;
+            obj.file = file;
+            return obj;
+        });
+        return res.status(200).send({ success: true, list })
+    } catch (error) {
+        console.error(new Date().toLocaleString(), _id, error);
+        return res.status(400).send({ success: false })
+    }
+
 
 })
 
