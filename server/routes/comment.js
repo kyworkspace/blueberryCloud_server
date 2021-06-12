@@ -50,16 +50,14 @@ router.post('/main/list', auth, async (req, res) => {
         const filelist = await getFileList({ "writer": _id });
         const fileIdList = filelist.map(itme => itme._id)
         const commentsList = await getCommentList({ "postId": { $in: fileIdList } });
-        const list = commentsList.map((item, index) => {
-            if (index < 8) {
-                let obj = new Object();
-                obj.id = item._id;
-                const file = filelist.find(x => String(x._id) === String(item.postId))
-                obj.file = file;
-                obj.user = item.writer;
-                obj.content = item.content;
-                return obj;
-            }
+        const list = commentsList.slice(0, 8).map((item, index) => {
+            let obj = new Object();
+            obj.id = item._id;
+            const file = filelist.find(x => String(x._id) === String(item.postId))
+            obj.file = file;
+            obj.user = item.writer;
+            obj.content = item.content;
+            return obj;
         })
         return res.status(200).send({ success: true, list });
     } catch (error) {

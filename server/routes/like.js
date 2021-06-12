@@ -122,7 +122,7 @@ router.post('/main/list', auth, async (req, res) => {
         const filelist = await getFileList({ "writer": _id });
         const fileIdList = filelist.map(itme => itme._id)
         const LikeList = await getLikeList({ contentsId: { $in: fileIdList } });
-        const list = LikeList.map(item => {
+        const list = LikeList.slice(0, 8).map(item => {
             let obj = new Object();
 
             const file = filelist.find(x => {
