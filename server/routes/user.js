@@ -106,13 +106,14 @@ router.post('/list', auth, async (req, res) => {
         skip,
     } = req.body;
     let findArgs = {
-        $or: [ //유형
+        _id: { $ne: req.user._id }
+    }
+    if (searchTerm) {
+        findArgs.$or = [ //유형
             { name: { "$regex": searchTerm } }
             , { email: { "$regex": searchTerm } }
             , { phoneNumber: { "$regex": searchTerm } }
-        ],
-        _id: { $ne: req.user._id }
-
+        ]
     }
     let userList = await getUserList(findArgs, limit, skip).catch(err => res.status(200).send({ success: false }));
     let friendList = await getFriendList({ $in: [1, 3] }, req.user).catch(err => res.status(200).send({ success: false }));

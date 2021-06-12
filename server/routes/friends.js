@@ -5,12 +5,13 @@ const { auth } = require('../middleware/auth');
 const { getFriendList } = require('../Controller/friendController');
 const { getUserFileList } = require('../Controller/fileController')
 
+//친구 추가 요청
 router.post('/add', auth, (req, res) => {
-    let adder = req.user._id;
+    let me = req.user._id;
     let { target } = req.body;
 
     Friends.findOneAndUpdate(
-        { userTo: target, userFrom: adder },
+        { userTo: target, userFrom: me },
         { $set: { level: 2 } },
         { upsert: true }
         , (err, friend) => {
@@ -18,7 +19,26 @@ router.post('/add', auth, (req, res) => {
             return res.status(200).send({ success: true })
         });
 });
+//친구 삭제
+router.post('/delete', auth, (req, res) => {
+    let { target } = req.body;
+    let me = req.user._id
+    Friends.findOneAndUpdate(
+        {
+            $or: [
+                { userTo: target, userFrom: me },
+                { userTo: me, userFrom: target }
+            ]
+        },
+        { $set: { level: 0 } },
+        { upsert: true }
+        , (err, friend) => {
+            if (err) return res.status(400).send({ success: false });
+            return res.status(200).send({ success: true })
+        });
+})
 
+// 친구 요청 목록
 router.post('/receive/list', auth, (req, res) => {
 
     let findArgs = {
