@@ -35,6 +35,10 @@ app.use(cors());
 dotenv.config({
     path: "./env/.env",
 });
+//entity too large issue
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }))
+
 //프론트쪽 클라이언트 
 const clientApp = path.join(__dirname, '../../BluberryCloud_front/build');
 
@@ -64,6 +68,7 @@ app.use('/api/friends', require('./routes/friends'));
 app.use('/api/like', require('./routes/like'));
 app.use('/api/comment', require('./routes/comment'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/notice', require('./routes/notice'));
 
 //로컬 업로드 파일 url과 경로
 app.use('/uploads', express.static(`${CloudFileMotherPath}`));
