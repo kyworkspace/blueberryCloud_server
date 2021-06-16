@@ -226,6 +226,7 @@ router.post('/file/upload/video', (req, res) => {
             //client 의 videoUploadPage에서 Line.52 에서 success true로 갈지 아닐지 판단
             return res.json({ success: false, err })
         }
+        console.log(res.req.file);
         res.req.file.hostPath = `uploads/tempfolder/${res.req.file.filename}`;
         return res.json({
             success: true,

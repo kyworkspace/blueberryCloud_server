@@ -42,15 +42,5 @@ router.post('/delete', (req, res) => {
             return res.status(200).send({ success: true });
         })
 });
-//공지사항 갯수
-router.post('/count', (req, res) => {
-    const { skip, limit } = req.body;
-
-    Notice.find()
-        .exec((err, list) => {
-            if (err) return res.status(400).send({ success: false });
-            return res.status(200).send({ success: true, count: list.length });
-        })
-})
 
 module.exports = router;

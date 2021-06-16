@@ -18,7 +18,7 @@ router.post('/timeline/list', auth, async (req, res) => {
         .populate('writer')
         .skip(skip)
         //파일 중요도, 파일명, 아이디, 생성일자로 정렬
-        .sort({ "createdAt": -1, "_id": 1, })
+        .sort({ "updatedAt": -1, "_id": 1, })
         .limit(limit)
         .exec((err, list) => {
             if (err) return res.status(400).json({ success: false, err })
