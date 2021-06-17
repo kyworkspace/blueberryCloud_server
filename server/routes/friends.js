@@ -10,32 +10,73 @@ router.post('/add', auth, (req, res) => {
     let me = req.user._id;
     let { target } = req.body;
 
-    Friends.findOneAndUpdate(
-        { userTo: target, userFrom: me },
-        { $set: { level: 2 } },
-        { upsert: true }
-        , (err, friend) => {
-            if (err) return res.status(400).send({ success: false });
-            return res.status(200).send({ success: true })
-        });
+    try {
+        Friends.find({ userTo: me, userFrom: target })
+            .exec((err, result) => { //이미 상대에게 받은 신청이 있으면
+                if (result.length > 0) {
+                    if (result[0].level === 0) {
+                        Friends.findOneAndUpdate(
+                            { userTo: me, userFrom: target },
+                            { $set: { level: 2 } },
+                            { upsert: true }
+                            , (err, friend) => {
+                                if (err) return res.status(400).send({ success: false });
+                                return res.status(200).send({ success: true })
+                            });
+                    } else {
+                        Friends.findOneAndUpdate(
+                            { userTo: me, userFrom: target },
+                            { $set: { level: 3 } },
+                            { upsert: true }
+                            , (err, friend) => {
+                                if (err) return res.status(400).send({ success: false });
+                                return res.status(200).send({ success: true })
+                            });
+                    }
+
+                } else {
+                    Friends.findOneAndUpdate(
+                        { userTo: target, userFrom: me },
+                        { $set: { level: 2 } },
+                        { upsert: true }
+                        , (err, friend) => {
+                            if (err) return res.status(400).send({ success: false });
+                            return res.status(200).send({ success: true })
+                        });
+                }
+            })
+
+    } catch (error) {
+        console.log('친추 오류')
+    }
+
+
+
 });
 //친구 삭제
 router.post('/delete', auth, (req, res) => {
     let { target } = req.body;
     let me = req.user._id
-    Friends.findOneAndUpdate(
-        {
-            $or: [
-                { userTo: target, userFrom: me },
-                { userTo: me, userFrom: target }
-            ]
-        },
-        { $set: { level: 0 } },
-        { upsert: true }
-        , (err, friend) => {
-            if (err) return res.status(400).send({ success: false });
-            return res.status(200).send({ success: true })
-        });
+    try {
+        Friends.findOneAndUpdate(
+            {
+                $or: [
+                    { userTo: target, userFrom: me },
+                    { userTo: me, userFrom: target }
+                ]
+            },
+            { $set: { level: 0 } },
+            { upsert: true }
+            , (err, friend) => {
+                if (err) return res.status(400).send({ success: false });
+                return res.status(200).send({ success: true })
+            });
+    } catch (error) {
+        console.log('친삭 오류')
+    }
+
+
+
 })
 
 // 친구 요청 목록

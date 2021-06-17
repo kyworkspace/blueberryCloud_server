@@ -7,7 +7,10 @@ const { getFileList } = require('../Controller/fileController');
 router.post('/list', async (req, res) => {
     let { contentsId } = req.body
     let findArgs = { postId: contentsId };
-    let list = await getCommentList(findArgs).catch(err => { return res.status(400).send({ success: false }) });
+    let list = await getCommentList(findArgs).catch(err => {
+        console.log(`댓글 목록 오류`);
+        return res.status(400).send({ success: false })
+    });
     return res.status(200).send({ success: true, list })
 })
 
@@ -20,7 +23,10 @@ router.post('/post', (req, res) => {
     }
     const comment = new Comment(param);
     comment.save((err, commentInfo) => {
-        if (err) return res.status(400).send({ success: false, err });
+        if (err) {
+            console.log(`댓글 업로드 오류`);
+            return res.status(400).send({ success: false, err });
+        }
         return res.status(200).send({ success: true })
     })
 })
@@ -32,7 +38,10 @@ router.post('/update', async (req, res) => {
         { $set: { content: content } }
         , { new: true }
         , (err, comment) => {
-            if (err) return res.status(400).send({ success: false });
+            if (err) {
+                console.log('댓글 수정 오류');
+                return res.status(400).send({ success: false });
+            }
             return res.status(200).send({ success: true })
         })
 });
@@ -40,7 +49,10 @@ router.post('/delete', async (req, res) => {
     let { id } = req.body
     Comment.findOneAndDelete({ _id: id })
         .exec((err, result) => {
-            if (err) return res.status(400).send({ success: false });
+            if (err) {
+                console.log('댓글 삭제 오류');
+                return res.status(400).send({ success: false });
+            }
             return res.status(200).send({ success: true })
         })
 })
@@ -61,6 +73,7 @@ router.post('/main/list', auth, async (req, res) => {
         })
         return res.status(200).send({ success: true, list });
     } catch (error) {
+        console.log('메인화면 댓글 오류')
         return res.status(400).send({ success: false });
     }
 })
