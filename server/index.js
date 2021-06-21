@@ -3,8 +3,18 @@ const dotenv = require("dotenv");
 //서버 설정
 const express = require('express');
 const app = express();
-const path = require('path');
+const server = require('http').createServer(app);
+//cors
 const cors = require('cors');
+//소켓 설정
+const io = require("socket.io")(server, {
+    cors: ['127.0.0.1:3000'],
+    method: ["GET", "POST"]
+});
+const ss = require('socket.io-stream');
+const fs = require('fs');
+const path = require('path');
+
 //모델 설정
 const cookieParser = require('cookie-parser');
 const config = require('./config/key');
@@ -24,6 +34,9 @@ const port = 5000
  * 즉, 보낸대로 받고 싶으면 true를 사용하여야 함.
  * ***/
 //app.use(bodyParser.urlencoded({ extended: true }));
+
+
+
 //express 의 빌트인 body-Parser
 // app.use(express.json());
 app.use(express.json());
@@ -107,7 +120,21 @@ app.post('/allRemove', async (req, res) => {
     }
 });
 
-
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`app listening at http://localhost:${port}`)
+});
+
+
+
+// 소켓 업로드 
+io.sockets.on('connection', function (socket) {
+    console.log('소켓 통신이 준비 되었습니다.');
+    ss(socket).on('upload', function (stream, data) {
+        // let fn = path.basename(data.name);
+        stream.pipe(fs.createWriteStream(`D:/BluberryCloud/tempfolder/${data.filename}`));
+    });
+
+    socket.on("disconnect", () => {
+        console.log("소켓 통신이 종료 됩니다.");
+    });
 })

@@ -162,12 +162,13 @@ router.post('/files/delete', (req, res) => {
     let fileList = req.body.fileList;
     fileList.map((item) => {
         let { physicalPath, thumbnailpath } = item;
+        console.log(item);
         if (physicalPath) { //파일삭제
             fs.readFileSync(physicalPath) && fs.unlinkSync(physicalPath);
         }
-        if (thumbnailpath) { // 썸네일 있으면 삭제
-            fs.readFileSync(thumbnailpath) && fs.unlinkSync(thumbnailpath);
-        }
+        // if (thumbnailpath) { // 썸네일 있으면 삭제 & 동영상 섬네일 안찍을거임
+        //     fs.readFileSync(thumbnailpath) && fs.unlinkSync(thumbnailpath);
+        // }
     })
     let idList = fileList.map(file => file._id);
     File.deleteMany({ _id: { $in: idList } }, (err, obj) => {
@@ -238,7 +239,7 @@ router.post('/file/upload/video', (req, res) => {
 router.post(`/video/save`, (req, res) => {
     //정크 폴더에 있던 파일을 옮겨 줄거임
     let newPath = req.body.originalpath;
-    let oldPath = req.body.path;
+    let oldPath = `${CloudFileMotherPath}/tempfolder/${req.body.filename}`;
     let filename = req.body.filename;
     let thumbnailpath = req.body.thumbnailpath;
     let thumbnailname = req.body.thumbnailname;
@@ -265,6 +266,7 @@ router.post(`/video/save`, (req, res) => {
     const file = new File(req.body);
     file.save((err, fileInfo) => {
         if (err) return res.status(400).json({ success: false, err });
+        console.log(fileInfo._id, '동영상 업로드 완료');
         return res.status(200).json({ success: true })
     })
 })
