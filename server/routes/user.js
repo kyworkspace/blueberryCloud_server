@@ -8,6 +8,10 @@ const { getUserFileList } = require('../Controller/fileController');
 const { getFriendList } = require('../Controller/friendController');
 const { generateRandom, emailAuthConfig } = require('../Controller/emailAuthController');
 
+const bcrypt = require('bcrypt');
+//salt를 이용해서 비밀번호 암호화
+const saltRounds = 10;
+
 
 router.post("/register", (req, res) => {
     //회원가입할때 필요한 정보를 client에서 가져오면
@@ -39,7 +43,7 @@ router.post('/login', (req, res) => {
         //요청된 이메일이 데이터 베이스에 있다면 비밀번호 확인
         user.comparePassword(req.body.password, (err, isMatch) => {
             if (!isMatch) {
-                return res.json({ loginSuccess: false, message: "비밀번호 틀림" })
+                return res.json({ loginSuccess: false, message: "비밀번호가 다릅니다." })
             }
             //비밀번호가 맞으면 Token 생성  
             user.generateToken((err, user) => {
@@ -82,6 +86,7 @@ router.get('/auth', auth, (req, res) => {
         phoneNumber: req.user.phoneNumber,
         greeting: req.user.greeting,
         cloudSize: req.user.cloudSize,
+        nickName: req.user.nickName
     })
 })
 
@@ -135,6 +140,35 @@ router.post('/list', auth, async (req, res) => {
     });
     return res.status(200).send({ success: true, list: userList })
 });
+// 비밀번호 변경함
+router.post('/password/update', auth, (req, res) => {
+    const { password, newPassword } = req.body;
+    const { _id } = req.user;
+    User.findOne({ _id }, (err, user) => {
+        user.comparePassword(password, (err, isMatch) => {
+            if (!isMatch) {
+                return res.json({ loginSuccess: false, message: "비밀번호가 다릅니다." })
+            }
+            bcrypt.genSalt(saltRounds, function (err, salt) {
+                if (err) return res.json({ success: false, err, message: '비밀번호 변경 오류가 발생하였습니다.' })
+                bcrypt.hash(newPassword, salt, function (err, hash) {
+                    if (err) return res.json({ success: false, err, message: '비밀번호 변경 오류가 발생하였습니다.' })
+                    let hashedPass = hash;
+                    User.updateOne(
+                        { _id }, //아이디로 해당 정보를 찾아서
+                        { password: hashedPass }, //token을 초기화 해주고
+                        (err, user) => {
+                            if (err) return res.json({ success: false, err, message: '비밀번호 변경 오류가 발생하였습니다.' });
+                            return res.status(200).send({
+                                success: true, message: '비밀번호 변경에 성공하였습니다.'
+                            })
+                        })
+                })
+            })
+        })
+    })
+
+})
 router.post('/dupCheck', (req, res) => {
     const { email } = req.body;
 
@@ -164,8 +198,6 @@ router.post('/sendAuthCheckMail', (req, res) => {
         emailAuthConfig.close();
         return res.status(200).send({ success: true, number })
     })
-
-
 })
 
 

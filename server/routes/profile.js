@@ -65,12 +65,20 @@ router.post('/image/save', auth, async (req, res) => {
 //프로필 수정
 router.post(`/info/update`, auth, async (req, res) => {
     let { _id } = req.user;
-    const { email, birthDay, phoneNumber, greeting } = req.body;
-    User.findOneAndUpdate({ _id: _id }, { email, birthDay, phoneNumber, greeting }, (err, profile) => {
+    const { email, birthDay, phoneNumber, greeting, name, nickName } = req.body;
+    User.findOneAndUpdate({ _id: _id }, { email, birthDay, phoneNumber, greeting, name, nickName }, (err, profile) => {
         if (err) return res.json({ success: false, err });
         return res.status(200).send({
             success: true
         })
+    })
+})
+//유저 프로필 
+router.post('/info/user', auth, async (req, res) => {
+    const { userId } = req.body;
+    User.findById({ _id: userId }).exec((err, user) => {
+        if (err) res.status(400).send({ success: false });
+        return res.status(200).send({ success: true, userInfo: user })
     })
 })
 

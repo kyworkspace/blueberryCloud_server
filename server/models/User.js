@@ -5,6 +5,10 @@ const saltRounds = 10;
 const jwt = require('jsonwebtoken');
 
 const userSchema = mongoose.Schema({
+    nickName: {
+        type: String,
+        maxlength: 50
+    },
     name: {
         type: String,
         maxlength: 50
@@ -70,7 +74,6 @@ const userSchema = mongoose.Schema({
 
 userSchema.pre('save', function (next) {//몽구스 메서드 'save' 전에 어떤 작업을 한다는뜻
     var user = this; //스키마 가져와서 비밀번호 가져옴
-
     //비밀번호를 바꿀때만 암호화 하도록 함
     if (user.isModified('password')) {
         //비밀번호 암호화 시킴.
@@ -89,7 +92,6 @@ userSchema.pre('save', function (next) {//몽구스 메서드 'save' 전에 어�
     }
 
 });
-
 userSchema.methods.comparePassword = function (plainPassword, cb) {
     //비밀번호 비교 메서드
     // plainPassword 123456
