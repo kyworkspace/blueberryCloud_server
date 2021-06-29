@@ -14,7 +14,7 @@ const io = require("socket.io")(server, {
 const ss = require('socket.io-stream');
 const fs = require('fs');
 const path = require('path');
-const bodyParser = require('body-parser')
+
 //모델 설정
 const cookieParser = require('cookie-parser');
 const config = require('./config/key');
