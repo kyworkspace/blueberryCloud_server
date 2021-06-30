@@ -138,8 +138,18 @@ router.post('/main/list', auth, async (req, res) => {
         console.error(new Date().toLocaleString(), _id, error);
         return res.status(400).send({ success: false })
     }
+});
 
-
+router.post('/like/all/count', auth, async (req, res) => {
+    const { _id } = req.user;
+    try {
+        const filelist = await getFileList({ "writer": _id });
+        const fileIdList = filelist.map(itme => itme._id)
+        const LikeList = await getLikeList({ contentsId: { $in: fileIdList } });
+        return res.status(200).send({ success: true, count: LikeList.length });
+    } catch (error) {
+        return res.status(400).send({ success: false });
+    }
 })
 
 module.exports = router;
