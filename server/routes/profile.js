@@ -5,6 +5,8 @@ const multer = require('multer');
 const { auth } = require('../middleware/auth');
 const fs = require('fs');
 const { makeFolder, CloudFileMotherPath } = require('../config/fileInit');
+const { getFileList } = require('../Controller/fileController');
+const { checkFriend } = require('../Controller/friendController');
 
 
 let fileUpload = (filePath) => {
@@ -80,6 +82,23 @@ router.post('/info/user', auth, async (req, res) => {
         if (err) res.status(400).send({ success: false });
         return res.status(200).send({ success: true, userInfo: user })
     })
+})
+//유저 사진 가져옴
+router.post('/list/user/media', auth, async (req, res) => {
+    const { userId, skip, limit } = req.body;
+    const { _id } = req.user;
+
+    //친구 여부 판단
+    const FriendFlag = await checkFriend(userId, _id);
+    let search = { 'writer': userId, 'openrating': { $in: [0] } };
+    if (userId == _id || FriendFlag) { //친구 일때
+        search.openrating = { $in: [0, 1] };
+    } else {// 친구 아닐때
+        search.openrating = { $in: [0] };
+    }
+    const list = await getFileList(search, skip, limit).catch(err => { return res.status(400).send({ success: false }) })
+    return res.status(200).send({ success: true, list })
+
 })
 
 module.exports = router;

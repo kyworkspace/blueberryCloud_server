@@ -23,9 +23,9 @@ const getFileList = (findArgs, skip, limit) => {
             .find(findArgs) //폴더경로 검색
             .populate('writer')
             .skip(skip)
+            .limit(limit)
             //파일 중요도, 파일명, 아이디, 생성일자로 정렬
             .sort({ "importance": 1, "createdAt": -1, "filename": 1, "_id": 1, })
-            .limit(limit)
             .exec((err, fileList) => {
                 if (err) reject(err)
                 resolve(fileList)

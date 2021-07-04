@@ -37,6 +37,35 @@ const getFriendList = (level, user) => {
     })
 }
 
+const checkFriend = (userId, myId) => {
+    let findArgs = {
+        $or: [
+            {
+                'userTo': userId,
+                'userFrom': myId
+            },
+            {
+                'userTo': myId,
+                'userFrom': userId
+            }
+        ]
+        ,
+        'level': [3]
+    }
+
+    return new Promise((resolve, reject) => {
+        Friends.find(findArgs).exec((err, list) => {
+            if (err) reject(err);
+            if (list.length > 0) {
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        })
+    })
+}
+
 module.exports = {
     getFriendList,
+    checkFriend
 }
