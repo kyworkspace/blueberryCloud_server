@@ -348,6 +348,21 @@ router.post('/file/update', (req, res) => {
         return res.status(200).json({ success: true });
     })
 })
+router.post('/folder/list', auth, (req, res) => {
+    const { _id } = req.user;
+    const { path } = req.body;
+
+    File.find(
+        {
+            writer: _id,
+            mimetype: "Folder",
+            cloudpath: path
+        }, (err, list) => {
+            if (err) return res.status(400).send({ success: false });
+            return res.status(200).send({ success: true, list })
+        })
+
+})
 
 
 
