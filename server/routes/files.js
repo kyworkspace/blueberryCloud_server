@@ -162,7 +162,6 @@ router.post('/files/delete', (req, res) => {
     let fileList = req.body.fileList;
     fileList.map((item) => {
         let { physicalPath, thumbnailpath } = item;
-        console.log(item);
         if (physicalPath) { //파일삭제
             fs.readFileSync(physicalPath) && fs.unlinkSync(physicalPath);
         }
@@ -364,6 +363,54 @@ router.post('/folder/list', auth, (req, res) => {
 
 })
 
+router.post('/folder/move', auth, (req, res) => {
+    const { path, fileList } = req.body
+    let pathArr = path.split('/');
+    if (pathArr.length > 1) {
+        pathArr.splice(0, 1);
+    } else {
+        pathArr = []
+    }
+    console.log(pathArr)
+    const { _id } = req.user;
+    try {
+        fileList.map((item) => {
+            const oldPath = item.physicalPath; //이전 물리경로
+            let oldPathArr = oldPath.split("/"); //물리 분리
+            let dateAndFile = oldPathArr.splice(oldPathArr.length - 2, 2) //날짜와 파일명 따로 분리
+            let allIndex = oldPathArr.indexOf(_id); //아이디 위치 파악
+            oldPathArr.splice(allIndex, oldPathArr.length) //아이디 위치 이후 경로 삭제
+            let newPath = [...oldPathArr, ...pathArr, ...dateAndFile]; //새로운 경로 중간에 삽입
+            const newdir = newPath.slice(0, newPath.length - 1) //폴더 생성용 경로
+            makeFolder(newdir.join('/')); //폴더 생성
+            const newLogicPath = `uploads/${_id}/${pathArr.join('/')}/${dateAndFile.join('/')}` //논리 경로 생성
+
+            fs.rename(oldPath, newPath.join('/'), (err) => { //파일 이동
+                if (err) throw err
+                File.findByIdAndUpdate({ _id: item._id }, { //하면서 업데이트
+                    $set: {
+                        logicPath: newLogicPath
+                        , physicalPath: newPath.join('/')
+                        , cloudpath: path
+                    }
+                })
+                    .exec((error, res) => {
+                        if (error) throw err;
+                    });
+            });
+        });
+        return res.status(200).send({ success: true });
+    } catch (error) {
+        console.log(error)
+        return res.status(400).send({ success: false });
+    }
+
+
+
+
+
+
+})
 
 
 module.exports = router;
