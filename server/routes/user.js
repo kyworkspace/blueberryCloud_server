@@ -167,8 +167,33 @@ router.post('/password/update', auth, (req, res) => {
             })
         })
     })
-
 })
+//비밀번호 찾기에서 하는 경우
+router.post('/password/reset', (req, res) => {
+    const { email, newPassword } = req.body;
+    User.findOne({ email }, (err, user) => {
+        bcrypt.genSalt(saltRounds, function (err, salt) {
+            if (err) return res.json({ success: false, err, message: '비밀번호 변경 오류가 발생하였습니다.' })
+            bcrypt.hash(newPassword, salt, function (err, hash) {
+                if (err) return res.json({ success: false, err, message: '비밀번호 변경 오류가 발생하였습니다.' })
+                let hashedPass = hash;
+                console.log(hashedPass)
+                User.findOneAndUpdate(
+                    { email }, //아이디로 해당 정보를 찾아서
+                    { password: hashedPass }, //비번 업뎃
+                    (err, user) => {
+                        if (err) return res.json({ success: false, err, message: '비밀번호 변경 오류가 발생하였습니다.' });
+                        console.log(user)
+                        return res.status(200).send({
+                            success: true, message: '비밀번호 변경에 성공하였습니다.'
+                        })
+                    })
+            })
+        })
+    })
+})
+
+//이미가입된 회원인지 아닌지 확인
 router.post('/dupCheck', (req, res) => {
     const { email } = req.body;
 
