@@ -177,13 +177,12 @@ router.post('/password/reset', (req, res) => {
             bcrypt.hash(newPassword, salt, function (err, hash) {
                 if (err) return res.json({ success: false, err, message: '비밀번호 변경 오류가 발생하였습니다.' })
                 let hashedPass = hash;
-                console.log(hashedPass)
                 User.findOneAndUpdate(
                     { email }, //아이디로 해당 정보를 찾아서
-                    { password: hashedPass }, //비번 업뎃
+                    { password: hashedPass },
+                    { new: true }, //비번 업뎃
                     (err, user) => {
                         if (err) return res.json({ success: false, err, message: '비밀번호 변경 오류가 발생하였습니다.' });
-                        console.log(user)
                         return res.status(200).send({
                             success: true, message: '비밀번호 변경에 성공하였습니다.'
                         })
