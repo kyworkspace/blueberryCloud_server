@@ -106,19 +106,19 @@ app.use('/basicBackground', express.static('BasicBackground'));
 // }
 
 // 파일 전체 삭제
-app.post('/allRemove', async (req, res) => {
-    console.log('모든 파일을 삭제합니다.')
-    try {
-        await removeAllComments();
-        await removeAllDisLike();
-        await removeAllLike();
-        await removeAllFiles();
-        return res.status(200).send({ success: true })
-    } catch (error) {
-        console.log(error)
-        return res.status(400).send({ success: false })
-    }
-});
+// app.post('/allRemove', async (req, res) => {
+//     console.log('모든 파일을 삭제합니다.')
+//     try {
+//         await removeAllComments();
+//         await removeAllDisLike();
+//         await removeAllLike();
+//         await removeAllFiles();
+//         return res.status(200).send({ success: true })
+//     } catch (error) {
+//         console.log(error)
+//         return res.status(400).send({ success: false })
+//     }
+// });
 
 server.listen(port, () => {
     console.log(`app listening at http://localhost:${port}`)
