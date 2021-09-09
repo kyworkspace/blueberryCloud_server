@@ -85,7 +85,7 @@ app.use('/api/notice', require('./routes/notice'));
 
 //로컬 업로드 파일 url과 경로
 app.use('/uploads', express.static(`${CloudFileMotherPath}`));
-app.use('/basicBackground', express.static('BasicBackground'));
+app.use('/basicBackground', express.static(`${CloudFileMotherPath}/BasicBackground`));
 
 // 빌드할때 해당 부분 삭제할것~!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // app.use(express.static(clientApp));
